@@ -5,7 +5,7 @@ import {NvidiaCart} from './nvidia-cart';
 import {config} from '../../../config';
 import {timestampUrlParameter} from '../../timestamp-url-parameter';
 
-function getRegionInfo(): NvidiaRegionInfo {
+export function getRegionInfo(): NvidiaRegionInfo {
 	let country = config.store.country;
 	if (!regionInfos.has(country)) {
 		country = 'usa';
@@ -19,7 +19,26 @@ function getRegionInfo(): NvidiaRegionInfo {
 	return regionInfo;
 }
 
-function nvidiaStockUrl(id: number, drLocale: string, currency: string): string {
+export function cardLandingPageUrl(series: string): string {
+	const urlPaths: string[] = [
+		'https://www.nvidia.com',
+		getRegionInfo().siteLocale,
+		'geforce',
+		'graphics-cards'
+	];
+
+	if (series === 'test:series') {
+		urlPaths.push('rtx-2060-super');
+	} else {
+		const major = series.slice(0, 2);
+		urlPaths.push(`${major}-series`);
+		urlPaths.push(`rtx-${series}`);
+	}
+
+	return urlPaths.join('/');
+}
+
+export function nvidiaStockUrl(id: number, drLocale: string, currency: string): string {
 	return `https://api-prod.nvidia.com/direct-sales-shop/DR/products/${drLocale}/${currency}/${id}?` +
 		timestampUrlParameter().slice(1);
 }

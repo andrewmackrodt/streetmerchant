@@ -1,4 +1,12 @@
-import {generateLinks, generateSetupAction} from './helpers/nvidia';
+import {
+	cardLandingPageUrl,
+	generateLinks,
+	generateOpenCartAction,
+	generateSetupAction,
+	getRegionInfo,
+	nvidiaStockUrl
+} from './helpers/nvidia';
+
 import {Store} from './store';
 
 // Region/country set by config file, silently ignores null / missing values and defaults to usa
@@ -36,6 +44,8 @@ export const regionInfos = new Map<string, NvidiaRegionInfo>([
 	['usa', {currency: 'USD', drLocale: 'en_us', fe2060SuperId: 5355772500, fe3080Id: 5438481700, fe3090Id: 5438481600, siteLocale: 'en-us'}]
 ]);
 
+let regionInfo: NvidiaRegionInfo | undefined;
+
 export const NvidiaApi: Store = {
 	labels: {
 		inStock: {
@@ -44,6 +54,41 @@ export const NvidiaApi: Store = {
 		}
 	},
 	links: generateLinks(),
+	linksBuilder: {
+		builder: (docElement, series) => {
+			const existingLink = NvidiaApi.links.find(link => (
+				link.brand === 'nvidia' &&
+					link.model === 'founders edition' &&
+					link.series === series
+			));
+
+			if (existingLink) {
+				return [existingLink];
+			}
+
+			const digitalRiverId = docElement.find('div[data-digital-river-id]').first().attr()?.['data-digital-river-id']?.trim();
+
+			if (!digitalRiverId) {
+				return [];
+			}
+
+			const productId = Number.parseInt(digitalRiverId, 10);
+			regionInfo ??= getRegionInfo();
+
+			return [{
+				brand: 'nvidia',
+				model: 'founders edition',
+				openCartAction: generateOpenCartAction(productId, `nvidia founders edition ${series}`),
+				series,
+				url: nvidiaStockUrl(productId, regionInfo.drLocale, regionInfo.currency)
+			}];
+		},
+		ttl: 30000,
+		urls: [
+			{series: '3080', url: cardLandingPageUrl('3080')},
+			{series: '3090', url: cardLandingPageUrl('3090')}
+		]
+	},
 	name: 'nvidia-api',
 	setupAction: generateSetupAction()
 };
