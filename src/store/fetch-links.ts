@@ -3,7 +3,7 @@ import {Print, logger} from '../logger';
 import {Browser} from 'puppeteer';
 import cheerio from 'cheerio';
 import {filterSeries} from './filter';
-import {usingResponse} from '../util';
+import {usingResponse} from '../puppeteer';
 
 function addNewLinks(store: Store, links: Link[], series: Series) {
 	if (links.length === 0) {

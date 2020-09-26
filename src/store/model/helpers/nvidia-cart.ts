@@ -1,5 +1,5 @@
 import {NvidiaRegionInfo, regionInfos} from '../nvidia-api';
-import {usingPage, usingResponse} from '../../../util';
+import {usingPage, usingResponse} from '../../../puppeteer';
 import {Browser} from 'puppeteer';
 import {config} from '../../../config';
 import {logger} from '../../../logger';
