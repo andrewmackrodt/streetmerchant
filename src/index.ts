@@ -1,7 +1,6 @@
 import {Stores} from './store/model';
 import {adBlocker} from './adblocker';
 import {config} from './config';
-import {getSleepTime} from './util';
 import {logger} from './logger';
 import puppeteer from 'puppeteer-extra';
 import resourceBlock from 'puppeteer-extra-plugin-block-resources';
@@ -60,7 +59,7 @@ async function main() {
 			store.setupAction(browser);
 		}
 
-		setTimeout(tryLookupAndLoop, getSleepTime(), browser, store);
+		void tryLookupAndLoop(browser, store);
 	}
 }
 
