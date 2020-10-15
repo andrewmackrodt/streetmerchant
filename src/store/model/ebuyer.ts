@@ -4,12 +4,12 @@ import {getProductLinksBuilder} from './helpers/card';
 export const Ebuyer: Store = {
 	labels: {
 		inStock: {
-			container: '.purchase-info',
-			text: ['add to basket', 'in stock']
+			container: '.purchase-info .unique-selling-points__stock-bold',
+			text: ['in stock']
 		},
 		outOfStock: {
 			container: '.purchase-info',
-			text: ['coming soon', 'we are expecting this item on']
+			text: ['coming soon', 'we are expecting this item on', 'out of stock']
 		}
 	},
 	links: [
@@ -17,7 +17,7 @@ export const Ebuyer: Store = {
 			brand: 'test:brand',
 			model: 'CARD',
 			series: 'test:series',
-			url: 'https://www.ebuyer.com/874209-gigabyte-geforce-rtx-2060-windforce-6gb-oc-graphics-card-gv-n2060wf2oc-6gd-v2'
+			url: 'https://www.ebuyer.com/874210-gigabyte-geforce-rtx-2060-oc-v2-6gb-graphics-card-gv-n2060oc-6gd-v2'
 		}
 	],
 	linksBuilder: {
