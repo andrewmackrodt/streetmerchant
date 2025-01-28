@@ -1,6 +1,6 @@
 import {IncomingMessage, Server, ServerResponse, createServer} from 'http';
 import {config, setConfig} from '../config';
-import {createReadStream, readdir} from 'fs';
+import {createReadStream, existsSync, readdir} from 'fs';
 import {
   getAllBrands,
   getAllModels,
@@ -11,7 +11,14 @@ import {
 import {isAbsolute, join, normalize, relative} from 'path';
 import {logger} from '../logger';
 
-const approot = join(__dirname, '../../../');
+const approot = (function () {
+  const path = join(__dirname, '../..');
+  if (existsSync(join(path, 'web'))) {
+    return path;
+  } else {
+    return join(path, '..');
+  }
+})();
 const webroot = join(approot, './web');
 const screenshotDir = join(approot, config.page.screenshotDir);
 
