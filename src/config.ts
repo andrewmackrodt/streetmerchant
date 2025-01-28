@@ -197,6 +197,7 @@ const browser = {
     process.env.PAGE_SLEEP_MAX,
     5000
   ),
+  executablePath: envOrString(process.env.BROWSER_EXECUTABLE_PATH),
   open: envOrBoolean(process.env.OPEN_BROWSER),
   userAgent: '',
 };

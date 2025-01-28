@@ -113,6 +113,11 @@ export async function launchBrowser(): Promise<Browser> {
       height: config.page.height,
       width: config.page.width,
     },
+    ...(config.browser.executablePath
+      ? {
+          executablePath: config.browser.executablePath,
+        }
+      : undefined),
     headless: config.browser.isHeadless,
   });
 
