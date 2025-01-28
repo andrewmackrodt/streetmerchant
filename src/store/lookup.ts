@@ -303,6 +303,8 @@ async function lookup(browser: Browser, store: Store) {
   /* eslint-enable no-await-in-loop */
 }
 
+export const openedLinks = new Set<string>();
+
 async function lookupIem(
   browser: Browser,
   store: Store,
@@ -326,10 +328,11 @@ async function lookupIem(
       link.cartUrl && config.store.autoAddToCart ? link.cartUrl : link.url;
     logger.info(`${Print.inStock(link, store, true)}\n${givenUrl}`);
 
-    if (config.browser.open) {
+    if (config.browser.open && !openedLinks.has(givenUrl)) {
       await (link.openCartAction === undefined
         ? open(givenUrl)
         : link.openCartAction(browser));
+      openedLinks.add(givenUrl);
     }
 
     sendNotification(link, store);

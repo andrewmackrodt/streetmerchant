@@ -4,7 +4,7 @@ import {startAPIServer, stopAPIServer} from './web';
 import Puppeteer, {Browser} from 'puppeteer';
 import {logger} from './logger';
 import {storeList} from './store/model';
-import {tryLookupAndLoop} from './store';
+import {openedLinks, tryLookupAndLoop} from './store';
 
 let browser: Browser | undefined;
 
@@ -19,6 +19,7 @@ async function restartMain() {
   if (config.restartTime > 0) {
     await sleep(config.restartTime);
     await stop();
+    openedLinks.clear()
     loopMain();
   }
 }
