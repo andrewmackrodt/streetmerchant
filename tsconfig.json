@@ -10,7 +10,11 @@
     "moduleResolution": "node",
     "outDir": "build",
     "skipLibCheck": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
+    ]
   },
   "include": [
     "src/**/*.ts",

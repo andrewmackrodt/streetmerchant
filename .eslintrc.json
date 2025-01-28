@@ -1,5 +1,6 @@
 {
   "extends": "./node_modules/gts/",
+  "ignorePatterns": ["src/types/**/*.d.ts"],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "prettier/prettier": [
