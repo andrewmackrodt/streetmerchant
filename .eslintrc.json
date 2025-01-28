@@ -1,5 +1,6 @@
 {
   "extends": "./node_modules/gts/",
+  "ignorePatterns": ["src/types/**/*.d.ts"],
   "rules": {
     "prettier/prettier": [
       "error",

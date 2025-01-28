@@ -1,12 +1,15 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
+    "baseUrl": "./src",
     "esModuleInterop": true,
     "outDir": "build",
     "resolveJsonModule": true,
-    "rootDir": ".",
-    // todo: remove
-    "skipLibCheck": true
+    "skipLibCheck": true,  // todo: remove
+    "typeRoots": [
+      "./src/types",
+      "./node_modules/@types"
+    ]
   },
   "include": [
     "src/**/*.ts",
