@@ -1,5 +1,6 @@
 import {Link, Model, Series} from '../store';
 import {logger} from '../../../logger';
+import * as url from "node:url";
 
 export interface Card {
   brand: string;
@@ -35,7 +36,10 @@ export function getProductLinksBuilder(options: LinksBuilderOptions) {
       let urlElement = titleElement;
 
       if (options.urlSelector) {
-        urlElement = urlElement.find(options.urlSelector).first();
+        urlElement = urlElement.find(options.urlSelector).first()
+        if (urlElement.empty()) {
+          urlElement = productElement.find(options.urlSelector).first();
+        }
       }
 
       let url = urlElement.attr()?.href;
