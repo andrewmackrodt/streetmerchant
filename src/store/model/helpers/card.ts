@@ -16,10 +16,19 @@ interface LinksBuilderOptions {
   urlSelector?: string;
 }
 
+export type LinksBuilderBuilder = ((
+  docElement: Cheerio<ParentNode>,
+  series: Series
+) => Link[]) & {
+  readonly options?: Readonly<LinksBuilderOptions>;
+};
+
 const isPartialUrlRegExp = /^(?!https?:).*/i;
 
-export function getProductLinksBuilder(options: LinksBuilderOptions) {
-  return (docElement: Cheerio<ParentNode>, series: Series): Link[] => {
+export function getProductLinksBuilder(
+  options: LinksBuilderOptions
+): LinksBuilderBuilder {
+  const builder: LinksBuilderBuilder = (docElement, series) => {
     const productElements = docElement.find(options.productsSelector);
     const links: Link[] = [];
     for (let i = 0; i < productElements.length; i++) {
@@ -66,6 +75,10 @@ export function getProductLinksBuilder(options: LinksBuilderOptions) {
 
     return links;
   };
+
+  Object.assign(builder, {options});
+
+  return builder;
 }
 
 export function parseCard(name: string): Card | null {

@@ -162,8 +162,8 @@ async function handleResponse(
   if (!isStatusCodeInRange(statusCode, successStatusCodes)) {
     if (statusCode === 429) {
       logger.warn(Print.rateLimit(link, store, true));
-    } else if (statusCode === 503) {
-      if (await checkIsCloudflare(store, page, link)) {
+    } else if ([403, 503].includes(statusCode)) {
+      if (await checkIsCloudflare(store, page, link, response)) {
         if (recursionDepth > 4) {
           logger.warn(Print.recursionLimit(link, store, true));
         } else {
@@ -171,7 +171,7 @@ async function handleResponse(
             waitUntil: 'networkidle0',
           });
           recursionDepth++;
-          statusCode = await handleResponse(
+          const tryStatusCode = await handleResponse(
             browser,
             store,
             page,
@@ -179,6 +179,9 @@ async function handleResponse(
             response,
             recursionDepth
           );
+          if (tryStatusCode > 0) {
+            statusCode = tryStatusCode;
+          }
         }
       } else {
         logger.warn(Print.badStatusCode(link, store, statusCode, true));
@@ -191,19 +194,43 @@ async function handleResponse(
   return statusCode;
 }
 
-async function checkIsCloudflare(store: Store, page: Page, link: Link) {
+async function checkIsCloudflare(
+  store: Store,
+  page: Page,
+  link: Link,
+  response?: HTTPResponse | null
+) {
+  // inspect the response headers to determine if a cloudflare challenge has been issued
+  if (
+    response?.headers()['cf-mitigated'] === 'challenge' &&
+    response.headers()['cf-ray']
+  ) {
+    logger.warn(Print.cloudflare(link, store, true));
+    return true;
+  }
+
+  // otherwise fall back to inspecting the dom, is this needed since checking headers?
   const baseOptions: Selector = {
     requireVisible: true,
     selector: 'body',
     type: 'textContent',
   };
 
-  const cloudflareLabel = {
-    container: 'div[class="attribution"] a[rel="noopener noreferrer"]',
-    text: ['Cloudflare'],
-  };
+  const cloudflareLabels = [
+    {
+      container: 'div[class="attribution"] a[rel="noopener noreferrer"]',
+      text: ['Cloudflare'],
+    },
+    {
+      text: ['window._cf_chl_opt='],
+    },
+  ];
 
-  if (await pageIncludesLabels(page, cloudflareLabel, baseOptions)) {
+  const checks = await Promise.all(
+    cloudflareLabels.map(label => pageIncludesLabels(page, label, baseOptions))
+  );
+
+  if (checks.some(result => Boolean(result))) {
     logger.warn(Print.cloudflare(link, store, true));
     return true;
   }

@@ -3,7 +3,7 @@ import {Print, logger} from '../logger';
 import {Browser} from 'puppeteer';
 import * as cheerio from 'cheerio';
 import {filterSeries} from './filter';
-import {tryUsingPage} from '../util';
+import {isStatusCodeInRange, tryUsingPage} from '../util';
 
 type StoreWithLinksBuilder = Store & Required<Pick<Store, 'linksBuilder'>>;
 
@@ -61,14 +61,45 @@ async function refreshLink(
     Print.message(`refreshing links: ${url}`, series, store, true, true)
   );
 
-  await tryUsingPage(browser, store, async page => {
-    const waitUntil = linksBuilder.waitUntil
-      ? linksBuilder.waitUntil
-      : 'domcontentloaded';
-    await page.goto(url, {waitUntil});
+  const waitUntil = linksBuilder.waitUntil
+    ? linksBuilder.waitUntil
+    : 'domcontentloaded';
 
-    if (linksBuilder.waitForSelector) {
-      await page.waitForSelector(linksBuilder.waitForSelector);
+  const waitForSelector =
+    linksBuilder.waitForSelector ??
+    (linksBuilder.builder.options
+      ? `${linksBuilder.builder.options.productsSelector} > *`
+      : undefined);
+
+  await tryUsingPage(browser, store, async page => {
+    let response = await page.goto(url, {waitUntil});
+    let status = response?.status() ?? 0;
+
+    if ([0, 403].includes(status) && response?.headers()['cf-ray']) {
+      const pageHostname = new URL(url).hostname;
+
+      // wait upto 15 seconds for verification to redirect to the main page
+      response = await page
+        .waitForResponse(
+          response =>
+            response.request().isNavigationRequest() &&
+            new URL(response.url()).hostname === pageHostname &&
+            isStatusCodeInRange(response.status(), [200, 299]),
+          {timeout: 15000}
+        )
+        .catch(() => null);
+
+      status = response?.status() ?? 0;
+
+      if (isStatusCodeInRange(status, [200, 299])) {
+        await page
+          .waitForNetworkIdle({concurrency: 2, timeout: 10000})
+          .catch(() => null);
+      }
+    }
+
+    if (waitForSelector) {
+      await page.waitForSelector(waitForSelector);
     }
 
     const html = await page.content();
