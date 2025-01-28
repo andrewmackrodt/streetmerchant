@@ -1,4 +1,4 @@
-import {createReadStream, readdir} from 'fs';
+import {createReadStream, existsSync, readdir} from 'fs';
 import {IncomingMessage, Server, ServerResponse, createServer} from 'http';
 import {isAbsolute, join, normalize, relative} from 'path';
 import {config, setConfig} from '../config';
@@ -12,7 +12,14 @@ import {
   updateStores,
 } from '../store/model';
 
-const approot = join(__dirname, '../../../');
+const approot = (function () {
+  const path = join(__dirname, '../..');
+  if (existsSync(join(path, 'web'))) {
+    return path;
+  } else {
+    return join(path, '..');
+  }
+})();
 const webroot = join(approot, './web');
 const screenshotDir = join(approot, config.page.screenshotDir);
 
