@@ -2,6 +2,7 @@ import {Store} from './store';
 import {getProductLinksBuilder} from './helpers/card';
 
 export const Ebuyer: Store = {
+  backoffStatusCodes: [403, 429, 503],
   currency: '£',
   labels: {
     inStock: {
@@ -22,7 +23,7 @@ export const Ebuyer: Store = {
       brand: 'test:brand',
       model: 'test:model',
       series: 'test:series',
-      url: 'https://www.ebuyer.com/874209-gigabyte-geforce-rtx-2060-windforce-6gb-oc-graphics-card-gv-n2060wf2oc-6gd-v2',
+      url: 'https://www.ebuyer.com/1870562-gigabyte-nvidia-geforce-rtx-4060-windforce-oc-graphics-card-for-gaming-gv-n4060wf2oc-8gd',
     },
     {
       brand: 'sony',
@@ -116,6 +117,18 @@ export const Ebuyer: Store = {
       {
         series: '3090',
         url: 'https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-3090',
+      },
+      {
+        series: '5070ti',
+        url: 'https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-5070-Ti',
+      },
+      {
+        series: '5080',
+        url: 'https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-5080',
+      },
+      {
+        series: '5090',
+        url: 'https://www.ebuyer.com/store/Components/cat/Graphics-Cards-Nvidia/subcat/GeForce-RTX-5090',
       },
     ],
   },
