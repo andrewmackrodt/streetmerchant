@@ -2,7 +2,6 @@ import {Link, Store} from '../store/model';
 import {Print, logger} from '../logger';
 import {config} from '../config';
 import {URLSearchParams} from 'url';
-import fetch from 'node-fetch';
 
 const {streamlabs} = config.notifications;
 let requestParams: URLSearchParams;

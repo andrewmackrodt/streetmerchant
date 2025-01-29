@@ -2,7 +2,6 @@ import {Link, Store} from '../store/model';
 import {Print, logger} from '../logger';
 import {config} from '../config';
 import {URL} from 'url';
-import fetch from 'node-fetch';
 
 const {freemobile} = config.notifications;
 

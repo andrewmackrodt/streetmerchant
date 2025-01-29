@@ -1,3 +1,5 @@
+import type {Cheerio} from 'cheerio';
+import type {ParentNode} from 'domhandler';
 import {Link, Model, Series} from '../store';
 import {logger} from '../../../logger';
 
@@ -17,7 +19,7 @@ interface LinksBuilderOptions {
 const isPartialUrlRegExp = /^(?!https?:).*/i;
 
 export function getProductLinksBuilder(options: LinksBuilderOptions) {
-  return (docElement: cheerio.Cheerio, series: Series): Link[] => {
+  return (docElement: Cheerio<ParentNode>, series: Series): Link[] => {
     const productElements = docElement.find(options.productsSelector);
     const links: Link[] = [];
     for (let i = 0; i < productElements.length; i++) {

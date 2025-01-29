@@ -90,7 +90,9 @@ export async function launchBrowser(): Promise<Browser> {
     args.push('--disable-dev-shm-usage');
     args.push('--no-sandbox');
     args.push('--disable-setuid-sandbox');
-    args.push('--headless');
+    if (!config.browser.isHeadless) {
+      args.push('--headless=new');
+    }
     args.push('--disable-gpu');
     config.browser.open = false;
   }

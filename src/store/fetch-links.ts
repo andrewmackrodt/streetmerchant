@@ -1,7 +1,7 @@
 import {Link, Series, Store} from './model';
 import {Print, logger} from '../logger';
 import {Browser} from 'puppeteer';
-import cheerio from 'cheerio';
+import * as cheerio from 'cheerio';
 import {filterSeries} from './filter';
 import {usingPage} from '../util';
 

@@ -1,5 +1,4 @@
 import {Store} from './store';
-import fetch from 'node-fetch';
 
 export const PlayStation: Store = {
   currency: '$',

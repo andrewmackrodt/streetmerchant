@@ -1,13 +1,22 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
+    "baseUrl": "./src",
     "esModuleInterop": true,
+    "lib": [
+      "DOM",
+      "ES2023"
+    ],
+    "moduleResolution": "node",
     "outDir": "build",
-    "resolveJsonModule": true,
-    "rootDir": ".",
-    // todo: remove
     "skipLibCheck": true,
-    "lib": ["DOM", "ES2021"]
+    "target": "ES2022"
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "ts-node": {
+    "swc": true
+  }
 }

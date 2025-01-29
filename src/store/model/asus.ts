@@ -1,4 +1,3 @@
-import fetch from 'node-fetch';
 import {Store} from './store';
 
 export const Asus: Store = {

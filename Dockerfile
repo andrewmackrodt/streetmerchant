@@ -1,10 +1,10 @@
-FROM node:16.18.0-alpine3.16 AS builder
+FROM node:20-alpine AS builder
 
 LABEL org.opencontainers.image.source="https://github.com/jef/streetmerchant"
 LABEL org.opencontainers.image.description="The world's easiest, most powerful stock checker"
 LABEL org.opencontainers.image.licenses="MIT"
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 WORKDIR /build
 
@@ -18,7 +18,7 @@ COPY test/ test/
 RUN npm run compile
 RUN npm prune --production
 
-FROM node:16.18.0-alpine3.16
+FROM node:20-alpine
 
 RUN apk add --no-cache chromium
 
@@ -34,8 +34,8 @@ USER appuser
 
 WORKDIR /app
 
-COPY --from=builder /build/node_modules/ node_modules/
-COPY --from=builder /build/build/ build/
+COPY --from=builder --chown=appuser:appuser /build/node_modules/ node_modules/
+COPY --from=builder --chown=appuser:appuser /build/build/ build/
 COPY web/ web/
 COPY package.json package.json
 

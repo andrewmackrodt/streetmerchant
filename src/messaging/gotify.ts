@@ -1,7 +1,6 @@
 import {Link, Store} from '../store/model';
 import {Print, logger} from '../logger';
 import {config} from '../config';
-import fetch from 'node-fetch';
 import {URLSearchParams} from 'url';
 
 const {gotify} = config.notifications;

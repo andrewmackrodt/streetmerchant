@@ -1,10 +1,8 @@
 import {
   Browser,
-  PageEventObject,
   Page,
   HTTPRequest,
   HTTPResponse,
-  ResponseForRequest,
 } from 'puppeteer';
 import {Link, Store, getStores} from './model';
 import {Print, logger} from '../logger';
@@ -15,9 +13,8 @@ import {
   getRandomUserAgent,
   getSleepTime,
   isStatusCodeInRange,
-  noop,
 } from '../util';
-import {disableBlockerInPage, enableBlockerInPage} from '../adblocker';
+import {enableBlockerInPage} from '../adblocker';
 import {config} from '../config';
 import {fetchLinks} from './fetch-links';
 import {filterStoreLink} from './filter';
@@ -95,58 +92,6 @@ async function handleProxy(request: HTTPRequest, proxy?: string) {
   return true;
 }
 
-async function handleAdBlock(request: HTTPRequest, adBlockRequestHandler: any) {
-  if (!adBlockRequestHandler) {
-    return false;
-  }
-
-  return new Promise(resolve => {
-    const continueFunc = async () => {
-      resolve(false);
-    };
-
-    const abortFunc = async () => {
-      try {
-        await request.abort();
-      } catch {
-        logger.debug('Failed to abort request.');
-      }
-
-      resolve(true);
-    };
-
-    const respondFunc = async (response: ResponseForRequest) => {
-      try {
-        await request.respond(response);
-      } catch {
-        logger.debug('Failed to abort request.');
-      }
-
-      resolve(true);
-    };
-
-    const requestProxy = new Proxy(request, {
-      get(target, prop, receiver) {
-        if (prop === 'continue') {
-          return continueFunc;
-        }
-
-        if (prop === 'abort') {
-          return abortFunc;
-        }
-
-        if (prop === 'respond') {
-          return respondFunc;
-        }
-
-        return Reflect.get(target, prop, receiver);
-      },
-    });
-
-    adBlockRequestHandler(requestProxy);
-  });
-}
-
 /**
  * Responsible for looking up information about a each product within
  * a `Store`. It's important that we ignore `no-await-in-loop` here
@@ -191,50 +136,21 @@ async function lookup(browser: Browser, store: Store) {
     const customContext = config.browser.isIncognito;
 
     const context = customContext
-      ? await browser.createIncognitoBrowserContext()
+      ? await browser.createBrowserContext()
       : browser.defaultBrowserContext();
     const page = await context.newPage();
     await page.setRequestInterception(true);
 
     page.setDefaultNavigationTimeout(config.page.timeout);
+    await page.setRequestInterception(true);
     await page.setUserAgent(await getRandomUserAgent());
 
-    let adBlockRequestHandler: any;
-    let pageProxy;
     if (useAdBlock) {
-      const onProxyFunc = (event: keyof PageEventObject, handler: any) => {
-        if (event !== 'request') {
-          page.on(event, handler);
-          return;
-        }
-
-        adBlockRequestHandler = handler;
-      };
-
-      pageProxy = new Proxy(page, {
-        get(target, prop, receiver) {
-          if (prop === 'on') {
-            return onProxyFunc;
-          }
-
-          // Give dummy setRequestInterception to avoid AdBlock from messing with it
-          if (prop === 'setRequestInterception') {
-            return noop;
-          }
-
-          return Reflect.get(target, prop, receiver);
-        },
-      });
-      await enableBlockerInPage(pageProxy);
+      await enableBlockerInPage(page);
     }
 
-    await page.setRequestInterception(true);
     page.on('request', async request => {
       if (await handleLowBandwidth(request)) {
-        return;
-      }
-
-      if (await handleAdBlock(request, adBlockRequestHandler)) {
         return;
       }
 
@@ -276,10 +192,6 @@ async function lookup(browser: Browser, store: Store) {
       }
       const client = await page.target().createCDPSession();
       await client.send('Network.clearBrowserCookies');
-    }
-
-    if (pageProxy) {
-      await disableBlockerInPage(pageProxy);
     }
 
     if (

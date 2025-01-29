@@ -1,7 +1,6 @@
 import {Link, Store} from '../store/model';
 import {Print, logger} from '../logger';
 import {config} from '../config';
-import fetch from 'node-fetch';
 
 const {ntfy} = config.notifications;
 

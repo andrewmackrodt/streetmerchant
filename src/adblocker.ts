@@ -1,12 +1,17 @@
 import {Page} from 'puppeteer';
-import {PuppeteerExtraPluginAdblocker} from 'puppeteer-extra-plugin-adblocker';
+import {PuppeteerBlocker} from '@ghostery/adblocker-puppeteer';
 
-export const adBlocker = new PuppeteerExtraPluginAdblocker({
-  blockTrackers: true,
-});
+let adBlocker: PuppeteerBlocker | undefined;
+
+async function initAdBlocker() {
+  if (!adBlocker) {
+    adBlocker = await PuppeteerBlocker.fromPrebuiltAdsAndTracking();
+  }
+  return adBlocker;
+}
 
 export async function enableBlockerInPage(page: Page) {
-  const blockerObject = await adBlocker.getBlocker();
+  const blockerObject = await initAdBlocker();
   if (blockerObject.isBlockingEnabled(page)) {
     return;
   }
@@ -15,7 +20,7 @@ export async function enableBlockerInPage(page: Page) {
 }
 
 export async function disableBlockerInPage(page: Page) {
-  const blockerObject = await adBlocker.getBlocker();
+  const blockerObject = await initAdBlocker();
   if (!blockerObject.isBlockingEnabled(page)) {
     return;
   }

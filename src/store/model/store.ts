@@ -1,3 +1,5 @@
+import type {Cheerio} from 'cheerio';
+import type {ParentNode} from 'domhandler';
 import {Browser, PuppeteerLifeCycleEvent} from 'puppeteer';
 
 export type Element = {
@@ -379,7 +381,7 @@ export type Store = {
   disableAdBlocker?: boolean;
   links: Link[];
   linksBuilder?: {
-    builder: (docElement: cheerio.Cheerio, series: Series) => Link[];
+    builder: (docElement: Cheerio<ParentNode>, series: Series) => Link[];
     ttl?: number;
     waitUntil?: PuppeteerLifeCycleEvent;
     waitForSelector?: string;
