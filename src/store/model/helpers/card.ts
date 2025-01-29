@@ -129,7 +129,7 @@ export function parseCard(name: string): Card | null {
 
     return (
       !word.match(
-        /^(nvidia|geforce|ge|force|rtx|amp[ae]re|graphics|card|gpu|pci-?e(xpress)?|ray-?tracing|ray|tracing|core|boost|epicx)$/i
+        /^(nvidia|geforce|ge|force|rtx|amp[ae]re|blackwell|graphics|card|gpu|pci-?e(xpress)?|ray-?tracing|ray|tracing|core|boost|epicx)$/i
       ) &&
       !word.match(/^(\d+(?:gb?|mhz)?|gb|mhz|g?ddr(\d+x?)?)$/i) &&
       !word.match(/^(display ?port|hdmi|vga)$/i)
@@ -145,7 +145,7 @@ export function parseCard(name: string): Card | null {
     model: model
       .join(' ')
       .toLowerCase()
-      .replace(/ gaming\b/g, '')
+      .replace(/ (?:for )?gaming\b/g, '')
       .trim() as Model,
   };
 }
