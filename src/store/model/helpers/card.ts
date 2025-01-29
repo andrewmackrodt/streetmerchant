@@ -47,6 +47,9 @@ export function getProductLinksBuilder(
 
       if (options.urlSelector) {
         urlElement = urlElement.find(options.urlSelector).first();
+        if (urlElement.empty()) {
+          urlElement = productElement.find(options.urlSelector).first();
+        }
       }
 
       let url = urlElement.attr()?.href;
