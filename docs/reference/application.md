@@ -2,7 +2,7 @@
 
 | Environment variable | Description |
 |:---:|---|
-| `AUTO_ADD_TO_CART` | Enable auto add to cart on support stores, default: `true` |
+| `AUTO_ADD_TO_CART` | Enable auto add to cart on supported stores, default: `true` if not `DOCKER` |
 | `BROWSER_TRUSTED` | Skip Chromium Sandbox. Useful for containerized environments, default: `false` |
 | `HEADLESS` | Puppeteer to run headless or not. Debugging related, default: `true` |
 | `INCOGNITO` | Puppeteer to run incognito or not. Debugging related, default: `false` |
@@ -11,7 +11,7 @@
 | `LOW_BANDWIDTH` | Blocks images/fonts to reduce traffic. Disables ad blocker, default: `false` |
 | `NVIDIA_ADD_TO_CART_ATTEMPTS` | Maximum number of attempts add an item to card in the Nvidia storefront, default: `10` |
 | `NVIDIA_SESSION_TTL` | Maximum session length on the Nvidia storefront in ms, default: `60000` |
-| `OPEN_BROWSER` | Toggle for whether or not the browser should open when item is found, default: `true` |
+| `OPEN_BROWSER` | Toggle for whether or not the browser should open when item is found, default: `true` if not `DOCKER` |
 | `PAGE_BACKOFF_MIN` | Minimum backoff time between retrying requests for the same store when a forbidden response is received, default: `10000` |
 | `PAGE_BACKOFF_MAX` | Maximum backoff time between retrying requests for the same store when a forbidden response is received, default: `3600000` |
 | `PAGE_SLEEP_MIN` | Minimum sleep time between queries of the same product page. In milliseconds, default: `5000` |

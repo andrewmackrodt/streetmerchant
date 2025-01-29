@@ -197,7 +197,10 @@ const browser = {
     process.env.PAGE_SLEEP_MAX,
     5000
   ),
-  open: envOrBoolean(process.env.OPEN_BROWSER),
+  open: envOrBoolean(
+    process.env.OPEN_BROWSER,
+    !envOrBoolean(process.env.DOCKER, false)
+  ),
   proxyCredentials: undefined as
     | undefined
     | {username: string; password: string},
@@ -446,7 +449,10 @@ if (
 }
 
 const store = {
-  autoAddToCart: envOrBoolean(process.env.AUTO_ADD_TO_CART, true),
+  autoAddToCart: envOrBoolean(
+    process.env.AUTO_ADD_TO_CART,
+    !envOrBoolean(process.env.DOCKER, false)
+  ),
   country: envOrString(process.env.COUNTRY, 'usa'),
   maxPrice: {
     series: {
