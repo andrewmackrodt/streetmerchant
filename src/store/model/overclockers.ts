@@ -5,15 +5,15 @@ export const Overclockers: Store = {
   currency: '£',
   labels: {
     inStock: {
-      container: '#detailbox',
+      container: 'ck-addto-cart-wrapper',
       text: ['add to basket', 'in stock'],
     },
     maxPrice: {
-      container: 'div[class="article_details_price"]',
+      container: 'ck-product-cta-box .price__amount',
       euroFormat: false, // Note: Overclockers uses non-euroFromat as price seperator
     },
     outOfStock: {
-      container: '#detailbox',
+      container: 'ck-addto-cart-wrapper',
       text: ['out of stock', 'pre order', 'bought to order'],
     },
   },
@@ -22,7 +22,7 @@ export const Overclockers: Store = {
       brand: 'test:brand',
       model: 'test:model',
       series: 'test:series',
-      url: 'https://www.overclockers.co.uk/gigabyte-geforce-rtx-2060-oc-rev2-6144mb-gddr6-pci-express-graphics-card-gx-1bj-gi.html',
+      url: 'https://www.overclockers.co.uk/gigabyte-geforce-rtx-4060-windforce-oc-8gb-gddr6-pci-express-graphics-card-gx-1g8-gi.html',
     },
     {
       brand: 'amd',
@@ -51,10 +51,10 @@ export const Overclockers: Store = {
   ],
   linksBuilder: {
     builder: getProductLinksBuilder({
-      productsSelector: '.ck_listing .artbox',
       sitePrefix: 'https://www.overclockers.co.uk',
-      titleAttribute: 'data-description',
-      titleSelector: 'a[href].producttitles',
+      productsSelector: 'ck-product-box',
+      titleSelector:
+        '[data-qa="ck-product-box-product-name"] a[href].js-gtm-product-link',
     }),
     urls: [
       {
@@ -92,6 +92,22 @@ export const Overclockers: Store = {
       {
         series: '3090',
         url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia/geforce-rtx-3090',
+      },
+      {
+        series: '5070',
+        url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia-graphics-cards/nvidia-geforce-rtx-5070-graphics-cards',
+      },
+      {
+        series: '5070ti',
+        url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia-graphics-cards/nvidia-geforce-rtx-5070-ti-graphics-cards',
+      },
+      {
+        series: '5080',
+        url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia-graphics-cards/nvidia-geforce-rtx-5080-graphics-cards',
+      },
+      {
+        series: '5090',
+        url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia-graphics-cards/nvidia-geforce-rtx-5090-graphics-cards',
       },
     ],
   },
