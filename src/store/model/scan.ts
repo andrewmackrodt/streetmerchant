@@ -12,15 +12,16 @@ export const Scan: Store = {
       },
     ],
     inStock: {
-      container: '.buyPanel .priceAvailability',
+      container: '.product-details .buyButton',
       text: ['add to basket', 'in stock'],
     },
     maxPrice: {
-      container: '.buyPanel .price',
+      container: '.product-details .price',
       euroFormat: false, // Note: Scan uses non-euroFromat as price seperator
     },
     outOfStock: {
-      container: '.buyPanel .priceAvailability',
+      container:
+        '.product-details .buyButton, .product-details .notification-panel',
       text: ['pre order'],
     },
   },
@@ -29,7 +30,7 @@ export const Scan: Store = {
       brand: 'test:brand',
       model: 'test:model',
       series: 'test:series',
-      url: 'https://www.scan.co.uk/products/msi-geforce-rtx-2060-ventus-xs-oc-6gb-gddr6-vr-ready-graphics-card-1920-core-1710mhz-boost',
+      url: 'https://www.scan.co.uk/products/gigabyte-nvidia-geforce-rtx-4060-windforce-oc-8gb-gddr6-ray-tracing-graphics-card-3072-core-2475mhz',
     },
     {
       brand: 'sony',
@@ -70,9 +71,10 @@ export const Scan: Store = {
   ],
   linksBuilder: {
     builder: getProductLinksBuilder({
-      productsSelector: 'div.productList ul.productColumns li.product',
       sitePrefix: 'https://www.scan.co.uk',
-      titleSelector: '.details .description',
+      productsSelector: 'ul.product-group li.product',
+      titleSelector: 'a[href] img[title]',
+      titleAttribute: 'title',
       urlSelector: 'a[href]',
     }),
     ttl: 300000,
@@ -111,9 +113,25 @@ export const Scan: Store = {
         series: '3090',
         url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia/nvidia-geforce-rtx-3090-graphics-cards',
       },
+      {
+        series: '5070',
+        url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5070-graphics-cards',
+      },
+      {
+        series: '5070ti',
+        url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5070-ti-graphics-cards',
+      },
+      {
+        series: '5080',
+        url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5080-graphics-cards',
+      },
+      {
+        series: '5090',
+        url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5090-graphics-cards',
+      },
     ],
   },
   name: 'scan',
   country: 'UK',
-  waitUntil: 'domcontentloaded',
+  waitUntil: 'networkidle2',
 };
