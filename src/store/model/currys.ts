@@ -5,15 +5,15 @@ export const Currys: Store = {
   currency: '£',
   labels: {
     inStock: {
-      container: '#product-actions button',
+      container: '.prices-add-to-cart-actions button.add-to-cart',
       text: ['add to basket'],
     },
     maxPrice: {
-      container: '#product-actions span[class*="ProductPriceBlock__Price"]',
+      container: '.prices-add-to-cart-actions .price',
       euroFormat: false, // Note: Currys uses non-euroFromat as price seperator
     },
     outOfStock: {
-      container: '#product-actions .unavailable',
+      container: '.prices-add-to-cart-actions button.oos-submit-button',
       text: ['not available for delivery'],
     },
   },
@@ -22,7 +22,7 @@ export const Currys: Store = {
       brand: 'test:brand',
       model: 'test:model',
       series: 'test:series',
-      url: 'https://www.currys.co.uk/gbuk/computing-accessories/components-upgrades/graphics-cards/msi-geforce-rtx-2060-8-gb-super-ventus-gp-oc-graphics-card-10196803-pdt.html',
+      url: 'https://www.currys.co.uk/products/gigabyte-geforce-rtx-4060-8-gb-windforce-oc-graphics-card-10264619.html',
     },
     {
       brand: 'amd',
@@ -75,9 +75,9 @@ export const Currys: Store = {
   ],
   linksBuilder: {
     builder: getProductLinksBuilder({
-      productsSelector: '.resultList .product',
+      productsSelector: '.product-grid .product-item-element',
       sitePrefix: 'https://www.currys.co.uk',
-      titleSelector: '.productTitle',
+      titleSelector: '.list-product-tile-name',
       urlSelector: 'a[href]',
     }),
     urls: [
@@ -113,9 +113,17 @@ export const Currys: Store = {
         series: '3090',
         url: 'https://www.currys.co.uk/gbuk/rtx-3090/components-upgrades/graphics-cards/324_3091_30343_xx_ba00013562-bv00313725/xx-criteria.html',
       },
+      {
+        series: '5080',
+        url: 'https://www.currys.co.uk/computing/components-and-upgrades/graphics-cards/rtx-5080',
+      },
+      {
+        series: '5090',
+        url: 'https://www.currys.co.uk/computing/components-and-upgrades/graphics-cards/rtx-5090',
+      },
     ],
   },
   name: 'currys',
   country: 'UK',
-  waitUntil: 'domcontentloaded',
+  waitUntil: 'networkidle2',
 };
