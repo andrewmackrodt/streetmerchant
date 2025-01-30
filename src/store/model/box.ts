@@ -6,16 +6,16 @@ export const Box: Store = {
   currency: '£',
   labels: {
     inStock: {
-      container: '#divBuyButton',
+      container: '.flex-col button',
       text: ['add to basket'],
     },
     maxPrice: {
-      container: '.p-price',
+      container: '.flex-col span.heading_primary',
       euroFormat: false, // Note: Box uses non-euroFromat as price seperator
     },
     outOfStock: {
-      container: '#divBuyButton',
-      text: ['request stock alert', 'coming soon'],
+      container: '.flex-col button',
+      text: ['request stock alert', 'coming soon', 'notify me'],
     },
   },
   links: [
@@ -23,7 +23,7 @@ export const Box: Store = {
       brand: 'test:brand',
       model: 'test:model',
       series: 'test:series',
-      url: 'https://www.box.co.uk/Gigabyte-GeForce-RTX-2080-Super-8GB-Wind_2724554.html',
+      url: 'https://box.co.uk/gv-n406teagle-8gd-gigabyte-geforce-rtx-4060-ti-eagle',
     },
     {
       brand: 'sony',
@@ -58,9 +58,9 @@ export const Box: Store = {
   ],
   linksBuilder: {
     builder: getProductLinksBuilder({
-      productsSelector: '.products-right .p-list',
+      productsSelector: 'app-product-list-view-card',
       sitePrefix: 'https://www.box.co.uk',
-      titleSelector: '.p-list-section > h3 > a[href]',
+      titleSelector: 'a:not(.flex)',
     }),
     urls: [
       {
@@ -82,6 +82,22 @@ export const Box: Store = {
       {
         series: '3090',
         url: 'https://www.box.co.uk/rtx-3090-graphics-cards',
+      },
+      {
+        series: '5070',
+        url: 'https://www.box.co.uk/rtx-5070-graphics-cards',
+      },
+      {
+        series: '5070ti',
+        url: 'https://www.box.co.uk/rtx-5070-ti-graphics-cards',
+      },
+      {
+        series: '5080',
+        url: 'https://www.box.co.uk/rtx-5080-graphics-cards',
+      },
+      {
+        series: '5090',
+        url: 'https://www.box.co.uk/rtx-5090-graphics-cards',
       },
     ],
   },
