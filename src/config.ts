@@ -198,6 +198,9 @@ const browser = {
     5000
   ),
   open: envOrBoolean(process.env.OPEN_BROWSER),
+  proxyCredentials: undefined as
+    | undefined
+    | {username: string; password: string},
   userAgent: '',
 };
 
@@ -419,6 +422,8 @@ const proxy = {
   address: envOrString(process.env.PROXY_ADDRESS),
   port: envOrNumber(process.env.PROXY_PORT, 80),
   protocol: envOrString(process.env.PROXY_PROTOCOL, 'http'),
+  username: envOrString(process.env.PROXY_USERNAME),
+  password: envOrString(process.env.PROXY_PASSWORD),
 };
 
 // Check for deprecated configuration values
@@ -518,6 +523,13 @@ const store = {
     const [name, minPageSleep, maxPageSleep] = entry.match(/[^:]+/g) ?? [];
 
     let proxyList = loadProxyList(name as string);
+
+    if (!proxyList) {
+      proxyList = envOrArray(process.env.PROXY_LIST);
+      if (proxyList.length === 0) {
+        proxyList = undefined;
+      }
+    }
 
     if (!proxyList) {
       proxyList = loadProxyList('global');

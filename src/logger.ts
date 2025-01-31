@@ -234,11 +234,24 @@ function buildSetupString(
   store: Store,
   color?: boolean
 ): string {
-  if (color) {
-    return chalk.cyan(`[${store.name}]`) + chalk.grey(` [setup (${topic})]`);
+  let proxy = '';
+  if (
+    typeof store.currentProxyIndex === 'number' &&
+    store.proxyList &&
+    store.proxyList.length > 1
+  ) {
+    proxy = `[${store.currentProxyIndex + 1}/${store.proxyList.length}] `;
   }
 
-  return `[${store.name}] [setup (${topic})]`;
+  if (color) {
+    return (
+      chalk.grey(proxy) +
+      chalk.cyan(`[${store.name}]`) +
+      chalk.grey(` [setup (${topic})]`)
+    );
+  }
+
+  return `${proxy}[${store.name}] [setup (${topic})]`;
 }
 
 function buildProductString(link: Link, store: Store, color?: boolean): string {

@@ -3,7 +3,7 @@ import {Print, logger} from '../logger';
 import {Browser} from 'puppeteer';
 import * as cheerio from 'cheerio';
 import {filterSeries} from './filter';
-import {usingPage} from '../util';
+import {tryUsingPage} from '../util';
 
 function addNewLinks(store: Store, links: Link[], series: Series) {
   if (links.length === 0) {
@@ -50,7 +50,7 @@ export async function fetchLinks(store: Store, browser: Browser) {
 
     url.map(x =>
       promises.push(
-        usingPage(browser, async page => {
+        tryUsingPage(browser, store, async page => {
           const waitUntil = linksBuilder.waitUntil
             ? linksBuilder.waitUntil
             : 'domcontentloaded';

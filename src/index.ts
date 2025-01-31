@@ -5,6 +5,7 @@ import Puppeteer, {Browser} from 'puppeteer';
 import {getSleepTime} from './util';
 import {logger} from './logger';
 import {storeList} from './store/model';
+import {parseProxy} from './proxy';
 import {tryLookupAndLoop} from './store';
 
 let browser: Browser | undefined;
@@ -99,9 +100,11 @@ export async function launchBrowser(): Promise<Browser> {
 
   // Add the address of the proxy server if defined
   if (config.proxy.address) {
-    args.push(
-      `--proxy-server=${config.proxy.protocol}://${config.proxy.address}:${config.proxy.port}`
-    );
+    const proxy = parseProxy(config.proxy.address);
+    args.push(`--proxy-server=${proxy.server}`);
+    if (proxy.credentials) {
+      config.browser.proxyCredentials = proxy.credentials;
+    }
   }
 
   if (args.length > 0) {

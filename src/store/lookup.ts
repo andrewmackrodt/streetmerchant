@@ -1,20 +1,8 @@
-import {
-  Browser,
-  Page,
-  HTTPRequest,
-  HTTPResponse,
-} from 'puppeteer';
+import {Browser, HTTPResponse, Page} from 'puppeteer';
 import {Link, Store, getStores} from './model';
 import {Print, logger} from '../logger';
 import {Selector, getPrice, pageIncludesLabels} from './includes-labels';
-import {
-  closePage,
-  delay,
-  getRandomUserAgent,
-  getSleepTime,
-  isStatusCodeInRange,
-} from '../util';
-import {enableBlockerInPage} from '../adblocker';
+import {delay, getSleepTime, isStatusCodeInRange, tryUsingPage} from '../util';
 import {config} from '../config';
 import {fetchLinks} from './fetch-links';
 import {filterStoreLink} from './filter';
@@ -22,75 +10,12 @@ import open from 'open';
 import {processBackoffDelay} from './model/helpers/backoff';
 import {sendNotification} from '../messaging';
 import {handleCaptchaAsync} from './captcha-handler';
-import useProxy from '@doridian/puppeteer-page-proxy';
 import {promises as fs} from 'fs';
 import path from 'path';
 
 const inStock: Record<string, boolean> = {};
 
 const linkBuilderLastRunTimes: Record<string, number> = {};
-
-function nextProxy(store: Store) {
-  if (!store.proxyList) {
-    return;
-  }
-
-  if (store.currentProxyIndex === undefined) {
-    store.currentProxyIndex = 0;
-  } else {
-    store.currentProxyIndex++;
-  }
-
-  if (store.currentProxyIndex >= store.proxyList.length) {
-    store.currentProxyIndex = 0;
-  }
-
-  logger.debug(
-    `ℹ [${store.name}] Next proxy index: ${store.currentProxyIndex} / Count: ${
-      store.proxyList.length
-    } (${store.proxyList[store.currentProxyIndex]})`
-  );
-
-  return store.proxyList[store.currentProxyIndex];
-}
-
-async function handleLowBandwidth(request: HTTPRequest) {
-  if (!config.browser.lowBandwidth) {
-    return false;
-  }
-
-  const typ = request.resourceType();
-  if (typ === 'font' || typ === 'image') {
-    try {
-      await request.abort();
-    } catch {
-      logger.debug('Failed to abort request.');
-    }
-
-    return true;
-  }
-
-  return false;
-}
-
-async function handleProxy(request: HTTPRequest, proxy?: string) {
-  if (!proxy) {
-    return false;
-  }
-
-  try {
-    await useProxy(request, proxy);
-  } catch (error: unknown) {
-    logger.error('handleProxy', error);
-    try {
-      await request.abort();
-    } catch {
-      logger.debug('Failed to abort request.');
-    }
-  }
-
-  return true;
-}
 
 /**
  * Responsible for looking up information about a each product within
@@ -130,87 +55,41 @@ async function lookup(browser: Browser, store: Store) {
       continue;
     }
 
-    const proxy = nextProxy(store);
-
-    const useAdBlock = !config.browser.lowBandwidth && !store.disableAdBlocker;
-    const customContext = config.browser.isIncognito;
-
-    const context = customContext
-      ? await browser.createBrowserContext()
-      : browser.defaultBrowserContext();
-    const page = await context.newPage();
-    await page.setRequestInterception(true);
-
-    page.setDefaultNavigationTimeout(config.page.timeout);
-    await page.setRequestInterception(true);
-    await page.setUserAgent(await getRandomUserAgent());
-
-    if (useAdBlock) {
-      await enableBlockerInPage(page);
-    }
-
-    page.on('request', async request => {
-      if (await handleLowBandwidth(request)) {
-        return;
+    await tryUsingPage<void>(browser, store, async page => {
+      if (store.captchaDeterrent) {
+        await runCaptchaDeterrent(browser, store, page);
       }
 
-      if (await handleProxy(request, proxy)) {
-        return;
-      }
+      let statusCode = 0;
 
       try {
-        await request.continue();
-      } catch {
-        logger.debug('Failed to continue request.');
+        statusCode = await lookupIem(browser, store, page, link);
+      } catch (error: unknown) {
+        if (store.currentProxyIndex !== undefined && store.proxyList) {
+          const proxy = `${store.currentProxyIndex + 1}/${
+            store.proxyList.length
+          }`;
+          logger.error(
+            `✖ [${proxy}] [${store.name}] ${link.brand} ${link.series} ${
+              link.model
+            } - ${(error as Error).message}`
+          );
+        } else {
+          logger.error(
+            `✖ [${store.name}] ${link.brand} ${link.series} ${link.model} - ${
+              (error as Error).message
+            }`
+          );
+        }
+        const client = await page.target().createCDPSession();
+        await client.send('Network.clearBrowserCookies');
       }
+
+      // Must apply backoff before closing the page, e.g. if CloudFlare is
+      // used to detect bot traffic, it introduces a 5 second page delay
+      // before redirecting to the next page
+      await processBackoffDelay(store, link, statusCode);
     });
-
-    if (store.captchaDeterrent) {
-      await runCaptchaDeterrent(browser, store, page);
-    }
-
-    let statusCode = 0;
-
-    try {
-      statusCode = await lookupIem(browser, store, page, link);
-    } catch (error: unknown) {
-      if (store.currentProxyIndex !== undefined && store.proxyList) {
-        const proxy = `${store.currentProxyIndex + 1}/${
-          store.proxyList.length
-        }`;
-        logger.error(
-          `✖ [${proxy}] [${store.name}] ${link.brand} ${link.series} ${
-            link.model
-          } - ${(error as Error).message}`
-        );
-      } else {
-        logger.error(
-          `✖ [${store.name}] ${link.brand} ${link.series} ${link.model} - ${
-            (error as Error).message
-          }`
-        );
-      }
-      const client = await page.target().createCDPSession();
-      await client.send('Network.clearBrowserCookies');
-    }
-
-    if (
-      store.currentProxyIndex !== undefined &&
-      store.proxyList &&
-      store.proxyList?.length > 1
-    ) {
-      const client = await page.target().createCDPSession();
-      await client.send('Network.clearBrowserCookies');
-    }
-
-    // Must apply backoff before closing the page, e.g. if CloudFlare is
-    // used to detect bot traffic, it introduces a 5 second page delay
-    // before redirecting to the next page
-    await processBackoffDelay(store, link, statusCode);
-    await closePage(page);
-    if (customContext) {
-      await context.close();
-    }
   }
   /* eslint-enable no-await-in-loop */
 }
