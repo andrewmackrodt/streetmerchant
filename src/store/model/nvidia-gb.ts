@@ -4,11 +4,11 @@ export const NvidiaGB: Store = {
   currency: '£',
   labels: {
     inStock: {
-      container: '.buy',
+      container: '.productView-options button',
       text: ['add to cart', 'buy now'],
     },
     outOfStock: {
-      container: '.buy',
+      container: '.productView-options button',
       text: ['out of stock'],
     },
   },
@@ -54,6 +54,18 @@ export const NvidiaGB: Store = {
       model: 'founders edition',
       series: '3090',
       url: 'https://shop.nvidia.com/en-gb/geforce/store/gpu/?page=1&limit=9&locale=en-gb&category=GPU&gpu=RTX%203090&manufacturer=NVIDIA',
+    },
+    {
+      brand: 'nvidia',
+      model: 'founders edition',
+      series: '5080',
+      url: 'https://marketplace.nvidia.com/en-gb/consumer/graphics-cards/nvidia-geforce-rtx-5080/',
+    },
+    {
+      brand: 'nvidia',
+      model: 'founders edition',
+      series: '5090',
+      url: 'https://marketplace.nvidia.com/en-gb/consumer/graphics-cards/nvidia-geforce-rtx-5090/',
     },
   ],
   name: 'nvidia-gb',
