@@ -1,6 +1,6 @@
 # Captcha
 
-A mechanism has been implemented to allow users to interactively handle captcha challenges without being directly connected to their streetmerchant instance. This works by sending the captcha challenge to the user directly via their preferred messaging service and waiting for their response, which is then input to the captcha page, allowing streetmerchant to proceed with its processing. 
+A mechanism has been implemented to allow users to interactively handle captcha challenges without being directly connected to their streetmerchant instance. This works by sending the captcha challenge to the user directly via their preferred messaging service and waiting for their response, which is then input to the captcha page, allowing streetmerchant to proceed with its processing.
 
 ???+ attention
     This implementation has only been tested/used on Amazon sites. Please submit an issue if you're facing captcha on other stores so we can get it integrated.
@@ -9,7 +9,7 @@ A mechanism has been implemented to allow users to interactively handle captcha 
 
 To use this feature, you will have to set up a bot user on your desired messaging service (see the [FAQ](#how-do-i-obtain-a-token-for) for more help). Once that's complete and you have the token for the bot, simply configure the variables shown below and then start your streetmerchant instance.
 
-???+ attention 
+???+ attention
     When a DM is received, you must reply to the message directly. In Slack, this is done by clicking the "reply to thread" button on the bot's DM, and sending a response in the thread panel that appears. In Discord, you simply click "Reply" on the bot's DM and type your response in the input field (you will see "Replying to [bot user name]" above the input field).
 
     If you send a reply back to the bot without associating the response to a message as described above, the bot will not receive the input.
@@ -18,7 +18,7 @@ To use this feature, you will have to set up a bot user on your desired messagin
 
 ## Testing
 
-You can test your notification configuration by running `npm run test:captcha`.
+You can test your notification configuration by running `pnpm run test:captcha`.
 
 ???+ info
     The test command will use the values from the dotenv configuration file, including timeout and poll interval.
@@ -91,7 +91,7 @@ That isn't a question. This is an FAQ.
 
 ### The bot didn't send a message when it detected a captcha page?
 
-Much better. This could either be a configuration error in streetmerchant (not completed, wrong values, etc) or the bot user isn't configured correctly in your messaging service. Double-check the configuration variables you've entered and use `npm run test:captcha` to help find out the root cause.
+Much better. This could either be a configuration error in streetmerchant (not completed, wrong values, etc) or the bot user isn't configured correctly in your messaging service. Double-check the configuration variables you've entered and use `pnpm run test:captcha` to help find out the root cause.
 
 ### Why are the bot images coming through broken?
 
@@ -101,7 +101,7 @@ This can depend on the capture type you are using as well as some other settings
 
 tl;dr - Neither approach offers a totally perfect solution. The `image` type is generally more robust, but can falter to image upload limits. The `link` type is higher quality, but is easier for stores to lock down.
 
-The choice between `image` and `link` capture types should mostly be unnecessary, but there are times where one will be required over the other. 
+The choice between `image` and `link` capture types should mostly be unnecessary, but there are times where one will be required over the other.
 
 First, if a store gets wise to the fact that their captcha images are being accessed outside their store/captcha pages, they may either block access or embed the images directly in the page, in which case `link` will not work as there will be no usable URL. Additionally a store may implement captcha in a way that a single URL is not sufficient, in which case `link` will also not be useful.
 

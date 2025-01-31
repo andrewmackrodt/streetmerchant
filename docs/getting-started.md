@@ -18,10 +18,10 @@ You do not need any computer skills, smarts, or anything of that nature. You are
 1. Clone this project `git clone https://github.com/jef/streetmerchant.git`.
     1. To checkout a particular reference, use `git checkout <ref name>` after cloning.
 1. Navigate to this project by entering `cd streetmerchant`.
-1. Run `npm install`.
+1. Run `pnpm install`.
 1. Make a copy of `dotenv-example` and name it `dotenv`.
 1. Edit the `dotenv` file to your liking using a text editor (like [vscode](https://code.visualstudio.com/)).
-1. Run `npm run start` to start.
+1. Run `pnpm run start` to start.
 
 At any point you want the program to stop, use ++ctrl+c++.
 
@@ -62,9 +62,9 @@ To customize streetmerchant, make a copy of `dotenv-example` as `dotenv` and mak
 
 ### Developing in Node.js
 
-The command `npm run start:dev` can be used instead of `npm run start` to automatically restart the project when filesystem changes are detected in the `src/` folder or `dotenv` file.
+The command `pnpm run start:dev` can be used instead of `pnpm run start` to automatically restart the project when filesystem changes are detected in the `src/` folder or `dotenv` file.
 
-Use `npm run lint` to see any linting uses and `npm run fix` to automatically fix the issues it can.
+Use `pnpm run lint` to see any linting uses and `pnpm run fix` to automatically fix the issues it can.
 
 ### Developing in Docker
 
@@ -103,7 +103,7 @@ docker-compose down
     ```
 
     Replace `<WEB_PORT>` with the value you gave in your `dotenv`.
-    
+
 ### Developing in Heroku
 
 #### Prerequisites
@@ -129,11 +129,11 @@ docker-compose down
 1. Locate the `package.json` file and open it.
     1. Locate the `"posttest"` config.
        1. Under it, paste:</br>
-       <pre><code>"postinstall": "npm run tsc",</br>
+       <pre><code>"postinstall": "pnpm run tsc",</br>
            "tsc": "tsc",</code></pre>
 1. Create a file called `Procfile` with no type declaration(.txt/.doc/.etc.)
     1. Open it with Notepad
-    2. Paste: `worker: npm run start:production`
+    2. Paste: `worker: pnpm run start:production`
     3. Close and save file
 1. Navigate to `src/` and find the file `index.ts`
     1. Open with IDE or Notepade
@@ -142,7 +142,7 @@ docker-compose down
      <pre><code>  const args: string[] = [
         '--no-sandbox',
         '--disable-setuid-sandbox'
-     c];</code></pre>                
+     c];</code></pre>
 #### Setting up Heroku
 ```shell
 # To start
@@ -182,9 +182,9 @@ Back to the terminal that you left open.
 You should see this:
 ![IMAGEOFRESOURCES](https://github.com/dev-nolant/streetmerchant/blob/main/docs/assets/images/streetmerchant-herokudynos.jpg)
 
-2. Click the pen icon on both to edit their states. 
-3. Turn off `web npm start`
-4. Turn on `worker npm run start:production`
+2. Click the pen icon on both to edit their states.
+3. Turn off `web pnpm start`
+4. Turn on `worker pnpm run start:production`
 5. Click confirm on both.
 6. Now you're essentially done!
     1. I recommend you click on the `more` dropdown and click `logs` to make sure everything is running smoothly.

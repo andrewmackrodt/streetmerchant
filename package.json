@@ -8,16 +8,17 @@
     "lint": "gts lint",
     "clean": "gts clean",
     "compile": "tsc",
-    "pretest": "npm run compile",
-    "posttest": "npm run lint",
-    "prestart": "npm run compile",
+    "compile:production": "tsc -p tsconfig.prod.json",
+    "pretest": "pnpm run compile",
+    "posttest": "pnpm run lint",
+    "prestart": "pnpm run compile",
     "start": "node build/src/index.js",
     "start:dev": "nodemon --config nodemon.json",
     "start:production": "node build/src/index.js",
     "test": "c8 mocha 'build/test/**/test-*.js' --exclude 'build/test/functional/**/test-*.js'",
-    "test:notification": "npm run compile && node build/test/functional/test-notification.js",
+    "test:notification": "pnpm run compile && node build/test/functional/test-notification.js",
     "test:notification:production": "node build/test/functional/test-notification.js",
-    "test:captcha": "npm run compile && node build/test/functional/test-captcha.js",
+    "test:captcha": "pnpm run compile && node build/test/functional/test-captcha.js",
     "test:captcha:production": "node build/test/functional/test-captcha.js"
   },
   "engines": {
@@ -36,13 +37,14 @@
   "homepage": "https://github.com/jef/streetmerchant#readme",
   "dependencies": {
     "@doridian/puppeteer-page-proxy": "^1.2.11",
-    "@jef/pushbullet": "^2.4.3",
     "@ghostery/adblocker-puppeteer": "^2.5.0",
+    "@jef/pushbullet": "^2.4.3",
     "@parse/node-apn": "^5.0.0",
     "@slack/web-api": "^6.3.0",
     "chalk": "^4.1.2",
     "cheerio": "^1.0.0",
     "discord.js": "^13.0.1",
+    "domhandler": "^5.0.3",
     "dotenv": "^10.0.0",
     "messaging-api-telegram": "^1.0.4",
     "mqtt": "^4.2.8",
@@ -82,5 +84,6 @@
   },
   "volta": {
     "node": "20.18.2"
-  }
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }

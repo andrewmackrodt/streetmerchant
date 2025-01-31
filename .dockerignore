@@ -1,7 +1,10 @@
-.idea/
-.git/
-.vs/
-.vscode/
-build/
-docs/
-node_modules/
+*
+!docs/
+!src/
+!web/
+!LICENSE
+!package.json
+!pnpm-lock.yaml
+!README.md
+!tsconfig.json
+!tsconfig.prod.json

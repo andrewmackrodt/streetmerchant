@@ -22,7 +22,9 @@ streetmerchant runs on Node.js:
 
 ```shell
 git clone https://github.com/jef/streetmerchant.git
-cd streetmerchant && npm i && npm run start
+cd streetmerchant
+corepack enable
+pnpm i && pnpm run start
 ```
 
 For more information and customization, visit [jef.buzz/streetmerchant/getting-started](https://jef.buzz/streetmerchant/getting-started).

@@ -1,6 +1,6 @@
 # Notification
 
-You can test your notification configuration by running `npm run test:notification`.
+You can test your notification configuration by running `pnpm run test:notification`.
 
 ## Apple Push Notification Service
 

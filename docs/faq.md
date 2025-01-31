@@ -26,8 +26,8 @@ Run the following commands:
 
 ```shell
 git pull origin main
-npm install
-npm run start
+pnpm install
+pnpm run start
 ```
 
 If you changed the code at all, this will most likely fail. You can clear out your changes by doing:
@@ -35,8 +35,8 @@ If you changed the code at all, this will most likely fail. You can clear out yo
 ```shell
 git checkout .
 git pull origin main
-npm install
-npm run start
+pnpm install
+pnpm run start
 ```
 
 You can also to [git-stash](https://git-scm.com/docs/git-stash), but we won't expand on that here.
