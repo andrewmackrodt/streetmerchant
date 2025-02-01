@@ -1,5 +1,7 @@
 /* eslint-disable no-process-exit */
+import fs from 'node:fs';
 import type {Browser} from 'puppeteer';
+import {directory as temporaryDirectory} from 'tempy';
 import {config} from './config'; // must be loaded before other application code
 import {AsyncContextError} from './abortctl';
 import * as abortctl from './abortctl';
@@ -25,6 +27,7 @@ class StreetMerchantApplication {
   #running = false;
   #stores: Store[] = [];
   #shutdownStartTime?: number;
+  #tempDirectory?: string;
 
   constructor() {
     this.#processListeners = new Map([
@@ -58,7 +61,8 @@ class StreetMerchantApplication {
 
     await startAPIServer();
 
-    this.#browser = await launchBrowser();
+    this.#tempDirectory = temporaryDirectory({prefix: 'streetmerchant-'});
+    this.#browser = await launchBrowser({userDataDir: this.#tempDirectory});
     this.#stores = [];
 
     this.#lookupEnabledStores(this.#browser);
@@ -108,6 +112,16 @@ class StreetMerchantApplication {
     if (this.#browser) {
       await this.#browser.close().catch(() => {});
       this.#browser = undefined;
+    }
+
+    if (this.#tempDirectory) {
+      logger.debug(`cleaning up temp directory: file://${this.#tempDirectory}`);
+      await fs.promises
+        .rm(this.#tempDirectory, {recursive: true, force: true})
+        .catch(error =>
+          logger.warn('✖ error cleaning up temp directory', error)
+        );
+      this.#tempDirectory = undefined;
     }
 
     this.#running = false;

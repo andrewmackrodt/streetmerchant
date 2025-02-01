@@ -1,9 +1,10 @@
-import Puppeteer, {Browser} from 'puppeteer';
+import type {Browser, LaunchOptions} from 'puppeteer';
+import Puppeteer from 'puppeteer';
 import {config} from './config';
 import {logger} from './logger';
 import {parseProxy} from './proxy';
 
-export async function launchBrowser(): Promise<Browser> {
+export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
   const args: string[] = [];
 
   // Skip Chromium Linux Sandbox
@@ -49,6 +50,7 @@ export async function launchBrowser(): Promise<Browser> {
     handleSIGINT: false,
     handleSIGTERM: false,
     headless: config.browser.isHeadless,
+    ...options,
   });
 
   const userAgent = await browser.userAgent();
