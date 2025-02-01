@@ -206,6 +206,10 @@ const browser = {
     | undefined
     | {username: string; password: string},
   userAgent: '',
+  userAgentKeepDefault: envOrBoolean(
+    process.env.USER_AGENT_KEEP_DEFAULT,
+    false
+  ),
 };
 
 const captchaHandler = {

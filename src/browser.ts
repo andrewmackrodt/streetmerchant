@@ -62,8 +62,10 @@ export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
     ...options,
   });
 
-  const userAgent = await browser.userAgent();
-  config.browser.userAgent = userAgent.replaceAll(/Headless/gi, '');
+  if (!config.browser.userAgent) {
+    const userAgent = await browser.userAgent();
+    config.browser.userAgent = userAgent.replaceAll(/Headless/gi, '');
+  }
 
   return browser;
 }

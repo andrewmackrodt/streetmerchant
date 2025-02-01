@@ -1,5 +1,6 @@
 import {unlinkSync} from 'fs';
 import {AsyncContextError} from './abortctl';
+import {config} from './config';
 import {StatusCodeRangeArray, Store} from './store/model';
 import {logger} from './logger';
 import {addTimeout} from './timers';
@@ -41,6 +42,10 @@ export function isStatusCodeInRange(
 }
 
 export function getRandomUserAgent(): string | undefined {
+  if (config.browser.userAgentKeepDefault) {
+    return config.browser.userAgent;
+  }
+
   const deprecatedUserAgent = (
     process.env.USER_AGENT
       ? process.env.USER_AGENT.includes('\n')
