@@ -1,133 +1,201 @@
-import * as Process from 'process';
-import {config} from './config'; // Needs to be loaded first
-import {startAPIServer, stopAPIServer} from './web';
-import Puppeteer, {Browser} from 'puppeteer';
-import {getSleepTime} from './util';
+/* eslint-disable no-process-exit */
+import type {Browser} from 'puppeteer';
+import {config} from './config'; // must be loaded before other application code
+import {AsyncContextError} from './abortctl';
+import * as abortctl from './abortctl';
+import {launchBrowser} from './browser';
 import {logger} from './logger';
-import {storeList} from './store/model';
-import {parseProxy} from './proxy';
 import {tryLookupAndLoop} from './store';
+import {getStores, Store} from './store/model';
+import type {Timer} from './timers';
+import * as timers from './timers';
+import {startAPIServer, stopAPIServer} from './web';
 
-let browser: Browser | undefined;
+class StreetMerchantApplication {
+  readonly #processListeners: Map<NodeJS.Signals, () => void>;
 
-async function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+  readonly #errorListeners: Map<
+    NodeJS.UncaughtExceptionOrigin,
+    (error: unknown) => void
+  >;
 
-/**
- * Schedules a restart of the bot
- */
-async function restartMain() {
-  if (config.restartTime > 0) {
-    await sleep(config.restartTime);
-    await stop();
-    loopMain();
+  #browser?: Browser;
+  #checkForNewStoresTimer?: Timer;
+  #errorRestartTimer?: Timer;
+  #running = false;
+  #stores: Store[] = [];
+  #shutdownStartTime?: number;
+
+  constructor() {
+    this.#processListeners = new Map([
+      ['SIGINT', this.#sigIntHandler.bind(this)],
+      ['SIGTERM', this.kill.bind(this)],
+      ['SIGQUIT', this.kill.bind(this)],
+    ]);
+
+    this.#errorListeners = new Map([
+      ['uncaughtException', this.#errorHandler.bind(this)],
+      ['unhandledRejection', this.#errorHandler.bind(this)],
+    ]);
   }
-}
 
-/**
- * Starts the bot.
- */
-async function main() {
-  browser = await launchBrowser();
-
-  for (const store of storeList.values()) {
-    logger.debug('store links', {meta: {links: store.links}});
-    if (store.setupAction !== undefined) {
-      store.setupAction(browser);
+  async start(): Promise<void> {
+    if (this.#running) {
+      return;
     }
 
-    setTimeout(tryLookupAndLoop, getSleepTime(store), browser, store);
+    this.#running = true;
+
+    this.#registerListeners();
+
+    abortctl.create('app.running');
+    timers.enable();
+
+    // register restart handler
+    if (config.restartTime > 0) {
+      timers.addTimeout(this.restart.bind(this), config.restartTime);
+    }
+
+    await startAPIServer();
+
+    this.#browser = await launchBrowser();
+    this.#stores = [];
+
+    this.#lookupEnabledStores(this.#browser);
+
+    // check for stores enabled via the web interface every second
+    // todo refactor this to use event emitter
+    this.#checkForNewStoresTimer = timers.addInterval(
+      this.#lookupEnabledStores.bind(this),
+      1000,
+      this.#browser
+    );
   }
 
-  await startAPIServer();
-}
+  /**
+   * Stops the application and performs necessary cleanup operations including
+   * clearing timers, closing browser instances, stopping API server, and
+   * removing process event listeners. This method returns early and async tasks
+   * may be left running until they finish. Use `kill()` to force exiting the
+   * process.
+   */
+  async stop(): Promise<void> {
+    if (!this.#running) {
+      return;
+    }
 
-async function stop() {
-  await stopAPIServer();
+    this.#errorListeners.forEach((listener, signal) =>
+      process.removeListener(signal, listener)
+    );
 
-  if (browser) {
-    // Use temporary swap variable to avoid any race condition
-    const browserTemporary = browser;
-    browser = undefined;
-    await browserTemporary.close();
+    if (this.#checkForNewStoresTimer) {
+      timers.removeInterval(this.#checkForNewStoresTimer);
+      this.#checkForNewStoresTimer = undefined;
+    }
+
+    if (this.#errorRestartTimer) {
+      timers.removeTimeout(this.#errorRestartTimer);
+      this.#errorRestartTimer = undefined;
+    }
+
+    abortctl.destroy('app.running');
+    timers.abort();
+
+    await stopAPIServer().catch(() => {});
+
+    this.#stores = [];
+
+    if (this.#browser) {
+      await this.#browser.close().catch(() => {});
+      this.#browser = undefined;
+    }
+
+    this.#running = false;
+
+    this.#processListeners.forEach((listener, signal) =>
+      process.removeListener(signal, listener)
+    );
   }
-}
 
-async function stopAndExit() {
-  await stop();
-  Process.exit(0);
-}
+  async restart(): Promise<void> {
+    logger.info('ℹ restarting...');
+    await this.stop();
+    await this.start();
+  }
 
-/**
- * Will continually run until user interferes.
- */
-async function loopMain() {
-  try {
-    restartMain();
-    await main();
-  } catch (error: unknown) {
+  async kill(): Promise<void> {
+    await this.stop().catch(() => {});
+    // eslint-disable-next-line no-process-exit
+    process.exit(1);
+  }
+
+  #lookupEnabledStores(browser: Browser) {
+    const pending = [...getStores().values()].filter(
+      store => !this.#stores.includes(store)
+    );
+
+    for (const store of pending) {
+      tryLookupAndLoop(browser, store).finally(() => {
+        const i = this.#stores.indexOf(store);
+        if (i >= 0) {
+          this.#stores.splice(i, 1);
+        }
+      });
+      this.#stores.push(store);
+    }
+  }
+
+  /**
+   * Handles the SIGINT signal for graceful shutdown of the application.
+   * This method ensures that the application stops all operations and exits
+   * appropriately. If the application is already in the shutting down state,
+   * it forces the process to exit with status code 1.
+   */
+  async #sigIntHandler() {
+    if (this.#shutdownStartTime) {
+      if (Date.now() - this.#shutdownStartTime < 100) {
+        // noop if sigint received more than once in 100 ms span
+        // workaround for (p)npm sending sigint too many times
+        return;
+      } else {
+        logger.warn('✖ forcing shutdown...');
+        process.exit(1);
+      }
+    }
+
+    logger.info('ℹ shutdown requested...');
+    this.#shutdownStartTime = Date.now();
+    await this.stop();
+  }
+
+  async #errorHandler(error: unknown) {
+    if (
+      this.#shutdownStartTime ||
+      this.#errorRestartTimer ||
+      error instanceof AsyncContextError
+    ) {
+      return;
+    }
+
     logger.error(
       '✖ something bad happened, resetting streetmerchant in 5 seconds',
       error
     );
-    setTimeout(loopMain, 5000);
+
+    this.#errorRestartTimer = timers.addTimeout(this.restart.bind(this), 5000);
+  }
+
+  #registerListeners() {
+    this.#processListeners.forEach((listener, signal) =>
+      process.addListener(signal, listener)
+    );
+
+    this.#errorListeners.forEach((listener, signal) =>
+      process.addListener(signal as 'uncaughtException', listener)
+    );
   }
 }
 
-export async function launchBrowser(): Promise<Browser> {
-  const args: string[] = [];
+export const app = new StreetMerchantApplication();
 
-  // Skip Chromium Linux Sandbox
-  // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox
-  if (config.browser.isTrusted) {
-    args.push('--no-sandbox');
-    args.push('--disable-setuid-sandbox');
-  }
-
-  // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
-  // https://stackoverflow.com/questions/48230901/docker-alpine-with-node-js-and-chromium-headless-puppeter-failed-to-launch-c
-  if (config.docker) {
-    args.push('--disable-dev-shm-usage');
-    args.push('--no-sandbox');
-    args.push('--disable-setuid-sandbox');
-    if (!config.browser.isHeadless) {
-      args.push('--headless=new');
-    }
-    args.push('--disable-gpu');
-    config.browser.open = false;
-  }
-
-  // Add the address of the proxy server if defined
-  if (config.proxy.address) {
-    const proxy = parseProxy(config.proxy.address);
-    args.push(`--proxy-server=${proxy.server}`);
-    if (proxy.credentials) {
-      config.browser.proxyCredentials = proxy.credentials;
-    }
-  }
-
-  if (args.length > 0) {
-    logger.info('ℹ puppeteer config: ', args);
-  }
-
-  await stop();
-  const browser = await Puppeteer.launch({
-    args,
-    defaultViewport: {
-      height: config.page.height,
-      width: config.page.width,
-    },
-    headless: config.browser.isHeadless,
-  });
-
-  config.browser.userAgent = await browser.userAgent();
-
-  return browser;
-}
-
-void loopMain();
-
-process.on('SIGINT', stopAndExit);
-process.on('SIGQUIT', stopAndExit);
-process.on('SIGTERM', stopAndExit);
+void app.start();

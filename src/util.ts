@@ -5,6 +5,7 @@ import {config} from './config';
 import {enableBlockerInPage} from './adblocker';
 import {logger} from './logger';
 import {handleDefaultContextProxy, nextStoreProxy} from './proxy';
+import {addTimeout} from './timers';
 
 // must be a require call unless converting project to use esm
 const topUserAgents: string[] = require('top-user-agents/desktop');
@@ -15,13 +16,9 @@ export function getSleepTime(store: Store) {
 }
 
 export async function delay(ms: number) {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
+  return new Promise<void>(resolve => {
+    addTimeout(resolve, ms);
   });
-}
-
-export function noop() {
-  // Do nothing
 }
 
 async function handleLowBandwidth(request: HTTPRequest) {

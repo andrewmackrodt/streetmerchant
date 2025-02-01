@@ -206,13 +206,16 @@ export async function startAPIServer() {
 }
 
 export async function stopAPIServer() {
-  return new Promise(resolve => {
+  return new Promise<void>((resolve, reject) => {
     if (server) {
-      server.close(resolve);
+      server.close(err => {
+        if (err) reject(err);
+        else resolve();
+      });
       server = undefined;
       return;
     }
 
-    resolve(null);
+    resolve();
   });
 }

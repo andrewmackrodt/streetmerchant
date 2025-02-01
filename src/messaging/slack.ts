@@ -4,6 +4,7 @@ import {Print, logger} from '../logger';
 import {WebClient} from '@slack/web-api';
 import {config} from '../config';
 import {DMPayload} from '.';
+import {addInterval, removeInterval} from '../timers';
 
 interface SlackBotMessage {
   ts: string;
@@ -136,10 +137,10 @@ export async function getDMResponseAsync(
   return new Promise(resolve => {
     let response = '';
     const finish = (result: string) => {
-      clearInterval(intervalId);
+      removeInterval(intervalId);
       resolve(result);
     };
-    const intervalId = setInterval(async () => {
+    const intervalId = addInterval(async () => {
       try {
         iteration++;
 

@@ -391,7 +391,7 @@ export type Store = {
   name: string;
   country: string;
   currency: '£' | '$' | '€' | 'R$' | 'kr.' | '';
-  setupAction?: (browser: Browser) => void;
+  setupAction?: (browser: Browser) => Promise<void>;
   /**
    * The range of status codes which considered successful, i.e. without error
    * allowing request parsing to continue. Setting an empty array will cause

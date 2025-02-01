@@ -3,6 +3,7 @@ import {DMPayload} from '.';
 import {config} from '../config';
 import {logger} from '../logger';
 import {Link, Store} from '../store/model';
+import {addInterval, removeInterval} from '../timers';
 
 const {notifyGroup, webhooks, notifyGroupSeries} = config.notifications.discord;
 const {pollInterval, responseTimeout, token, userId} = config.captchaHandler;
@@ -152,10 +153,10 @@ export async function getDMResponseAsync(
   }
   return new Promise(resolve => {
     let response = '';
-    const intervalId = setInterval(async () => {
+    const intervalId = addInterval(async () => {
       const finish = (result: string) => {
         client?.destroy();
-        clearInterval(intervalId);
+        removeInterval(intervalId);
         resolve(result);
       };
       try {

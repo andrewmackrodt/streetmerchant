@@ -1,10 +1,11 @@
 import {Browser, HTTPResponse, Page} from 'puppeteer';
-import {Link, Store, getStores} from './model';
+import * as abortctl from '../abortctl';
+import {getStores, Link, Store} from './model';
 import {Print, logger} from '../logger';
 import {Selector, getPrice, pageIncludesLabels} from './includes-labels';
 import {delay, getSleepTime, isStatusCodeInRange, tryUsingPage} from '../util';
 import {config} from '../config';
-import {fetchLinks} from './fetch-links';
+import {refreshLinksBuilder} from './fetch-links';
 import {filterStoreLink} from './filter';
 import open from 'open';
 import {processBackoffDelay} from './model/helpers/backoff';
@@ -12,10 +13,9 @@ import {sendNotification} from '../messaging';
 import {handleCaptchaAsync} from './captcha-handler';
 import {promises as fs} from 'fs';
 import path from 'path';
+import {addTimeout} from '../timers';
 
 const inStock: Record<string, boolean> = {};
-
-const linkBuilderLastRunTimes: Record<string, number> = {};
 
 /**
  * Responsible for looking up information about a each product within
@@ -26,27 +26,23 @@ const linkBuilderLastRunTimes: Record<string, number> = {};
  * @param store Vendor of items.
  */
 async function lookup(browser: Browser, store: Store) {
-  if (!getStores().has(store.name)) {
+  if (!storeShouldRun(store)) {
+    // store has been disabled or main application loop is stopping
     return;
   }
 
-  if (store.linksBuilder) {
-    const lastRunTime = linkBuilderLastRunTimes[store.name] ?? -1;
-    const ttl = store.linksBuilder.ttl ?? Number.MAX_SAFE_INTEGER;
-    if (lastRunTime === -1 || Date.now() - lastRunTime > ttl) {
-      logger.info(`[${store.name}] Running linksBuilder...`);
-      try {
-        await fetchLinks(store, browser);
-        linkBuilderLastRunTimes[store.name] = Date.now();
-      } catch (error: unknown) {
-        logger.error(error);
-      }
-    }
-  }
+  await refreshLinksBuilder(browser, store);
 
   /* eslint-disable no-await-in-loop */
   for (const link of store.links) {
+    if (!storeShouldRun(store)) {
+      // store has been disabled or main application loop is stopping
+      return;
+    }
+
     if (!filterStoreLink(link)) {
+      // filter for store links within the lookup loop as watched brands, series
+      // etc may have been updated externally via the web interface
       continue;
     }
 
@@ -128,7 +124,7 @@ async function lookupIem(
     if (config.page.inStockWaitTime) {
       inStock[link.url] = true;
 
-      setTimeout(() => {
+      addTimeout(() => {
         inStock[link.url] = false;
       }, 1000 * config.page.inStockWaitTime);
     }
@@ -340,9 +336,7 @@ async function runCaptchaDeterrent(browser: Browser, store: Store, page: Page) {
         waitUntil: givenWaitFor,
       });
       statusCode = await handleResponse(browser, store, page, link, response);
-      setTimeout(() => {
-        // Do nothing
-      }, 3000);
+      await new Promise<void>(resolve => addTimeout(resolve, 3000));
     } catch (error: unknown) {
       logger.error(error);
     }
@@ -356,19 +350,32 @@ async function runCaptchaDeterrent(browser: Browser, store: Store, page: Page) {
 }
 
 export async function tryLookupAndLoop(browser: Browser, store: Store) {
-  if (!browser.isConnected()) {
-    logger.silly(`[${store.name}] Ending this loop as browser is disposed...`);
-    return;
+  // delay starting the loop to reduce the amount of simultaneous requests
+  // during application start or when enabling new stores via the web api
+  await delay(getSleepTime(store));
+
+  if (store.setupAction) {
+    await store.setupAction(browser);
   }
 
-  logger.silly(`[${store.name}] Starting lookup...`);
-  try {
-    await lookup(browser, store);
-  } catch (error: unknown) {
-    logger.error(error);
-  }
+  logger.debug('store links', {meta: {links: store.links}});
 
-  const sleepTime = getSleepTime(store);
-  logger.silly(`[${store.name}] Lookup done, next one in ${sleepTime} ms`);
-  setTimeout(tryLookupAndLoop, sleepTime, browser, store);
+  while (storeShouldRun(store)) {
+    try {
+      logger.silly(`[${store.name}] Starting lookup...`);
+      await lookup(browser, store);
+    } catch (error: unknown) {
+      logger.error(error);
+    }
+
+    if (storeShouldRun(store)) {
+      const sleep = getSleepTime(store);
+      logger.silly(`[${store.name}] Lookup done, next one in ${sleep} ms`);
+      await delay(sleep);
+    }
+  }
+}
+
+function storeShouldRun(store: Store) {
+  return getStores().has(store.name) && abortctl.available('app.running');
 }
