@@ -1,8 +1,12 @@
-import type {Browser, LaunchOptions} from 'puppeteer';
+import type {Browser, BrowserContext, LaunchOptions, Page} from 'puppeteer';
 import Puppeteer from 'puppeteer';
+import {enableBlockerInPage} from './adblocker';
 import {config} from './config';
 import {logger} from './logger';
-import {parseProxy} from './proxy';
+import {onRequest, tryAbortRequest} from './handlers';
+import {nextStoreProxy, parseProxy} from './proxy';
+import {Store} from './store/model';
+import {getRandomUserAgent, logUnexpectedError} from './util';
 
 export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
   const args: string[] = [
@@ -62,4 +66,113 @@ export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
   config.browser.userAgent = userAgent.replaceAll(/Headless/gi, '');
 
   return browser;
+}
+
+export async function usingPage<T>(
+  browser: Browser,
+  store: Store,
+  cb: (page: Page, browser: Browser) => Promise<T>
+) {
+  const isDefaultContent = !config.browser.isIncognito;
+  const storeProxy = nextStoreProxy(store);
+  let context: BrowserContext | undefined;
+  let page: Page | undefined;
+
+  try {
+    context = isDefaultContent
+      ? browser.defaultBrowserContext()
+      : await browser.createBrowserContext({proxyServer: storeProxy?.server});
+
+    page = await context.newPage();
+
+    page.setDefaultNavigationTimeout(config.page.timeout);
+    await page.setRequestInterception(true);
+    const userAgent = getRandomUserAgent();
+    if (userAgent) {
+      await page.setUserAgent(userAgent);
+    }
+
+    // chrome does not support specifying username/password to --proxy-server
+    // prefill basic auth popup for proxy authentication if either of:
+    // - root proxy is used
+    // - store proxy is used with custom context
+    const credentials = !storeProxy
+      ? config.browser.proxyCredentials
+      : isDefaultContent
+      ? undefined
+      : storeProxy.credentials;
+
+    if (credentials) {
+      await page
+        .authenticate({
+          username: credentials.username,
+          password: credentials.password,
+        })
+        .catch(err => {
+          logger.error('error configuration proxy auth on page', err);
+        });
+    }
+
+    const useAdBlock = !config.browser.lowBandwidth && !store.disableAdBlocker;
+
+    if (useAdBlock) {
+      await enableBlockerInPage(page);
+    }
+
+    page.on('request', request => {
+      if (page) {
+        onRequest(page, request, isDefaultContent, storeProxy);
+      } else {
+        logger.debug(`page not defined, aborting request: ${request.url()}`);
+        tryAbortRequest(request);
+      }
+    });
+
+    return await cb(page, browser);
+  } finally {
+    await doUsingPageCleanup(store, isDefaultContent, context, page).catch(
+      logUnexpectedError
+    );
+  }
+}
+
+export async function tryUsingPage<T>(
+  browser: Browser,
+  store: Store,
+  cb: (page: Page, browser: Browser) => Promise<T | undefined>
+) {
+  return usingPage(browser, store, cb).catch(logUnexpectedError);
+}
+
+async function doUsingPageCleanup(
+  store: Store,
+  isDefaultContent: boolean,
+  context?: BrowserContext,
+  page?: Page
+) {
+  if (!context) {
+    // noop if context is undefined
+    return;
+  }
+
+  if (isDefaultContent) {
+    if (page) {
+      // close the finished page
+      await page.close().catch(() => {});
+
+      // clear browser cookies if using a store proxy
+      if (
+        store.currentProxyIndex !== undefined &&
+        store.proxyList &&
+        Number(store.proxyList?.length) > 1 &&
+        page
+      ) {
+        const client = await page.target().createCDPSession();
+        await client.send('Network.clearBrowserCookies');
+      }
+    }
+  } else {
+    // close the custom context
+    await context.close();
+  }
 }

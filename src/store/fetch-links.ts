@@ -2,8 +2,9 @@ import {Link, Series, Store} from './model';
 import {Print, logger} from '../logger';
 import {Browser} from 'puppeteer';
 import * as cheerio from 'cheerio';
+import {tryUsingPage} from '../browser';
 import {filterSeries} from './filter';
-import {isStatusCodeInRange, tryUsingPage} from '../util';
+import {isStatusCodeInRange} from '../util';
 
 type StoreWithLinksBuilder = Store & Required<Pick<Store, 'linksBuilder'>>;
 

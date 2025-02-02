@@ -3,7 +3,12 @@ import * as abortctl from '../abortctl';
 import {getStores, Link, Store} from './model';
 import {Print, logger} from '../logger';
 import {Selector, getPrice, pageIncludesLabels} from './includes-labels';
-import {delay, getSleepTime, isStatusCodeInRange, tryUsingPage} from '../util';
+import {
+  delay,
+  getSleepTime,
+  isStatusCodeInRange,
+  logUnexpectedError,
+} from '../util';
 import {config} from '../config';
 import {refreshLinksBuilder} from './fetch-links';
 import {filterStoreLink} from './filter';
@@ -13,6 +18,7 @@ import {sendNotification} from '../messaging';
 import {handleCaptchaAsync} from './captcha-handler';
 import {promises as fs} from 'fs';
 import path from 'path';
+import {tryUsingPage} from '../browser';
 import {addTimeout} from '../timers';
 
 const inStock: Record<string, boolean> = {};
@@ -392,7 +398,7 @@ export async function tryLookupAndLoop(browser: Browser, store: Store) {
       logger.silly(`[${store.name}] Starting lookup...`);
       await lookup(browser, store);
     } catch (error: unknown) {
-      logger.error(error);
+      logUnexpectedError(error);
     }
 
     if (storeShouldRun(store)) {

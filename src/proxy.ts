@@ -1,5 +1,3 @@
-import type {HTTPRequest, Page} from 'puppeteer';
-import {proxyRequest} from 'puppeteer-proxy';
 import {logger} from './logger';
 import {config} from './config';
 import type {Store} from './store/model';
@@ -90,24 +88,4 @@ export function nextStoreProxy(store: Store): Proxy | undefined {
   }
 
   return proxy;
-}
-
-export async function handleDefaultContextProxy(
-  page: Page,
-  proxy: string,
-  request: HTTPRequest
-) {
-  if (request.isInterceptResolutionHandled()) {
-    return;
-  }
-  try {
-    await proxyRequest({page, proxyUrl: proxy, request});
-  } catch (error: unknown) {
-    logger.error('handleProxy', error);
-    try {
-      await request.abort();
-    } catch {
-      logger.debug('Failed to abort request.');
-    }
-  }
 }
