@@ -1,12 +1,12 @@
 /* eslint-disable no-process-exit */
 import fs from 'node:fs';
-import type {Browser} from 'puppeteer';
 import {directory as temporaryDirectory} from 'tempy';
 import {config} from './config'; // must be loaded before other application code
 import {AsyncContextError} from './abortctl';
 import * as abortctl from './abortctl';
-import {launchBrowser} from './browser';
+import {abortBrowserContexts, enableBrowserContexts} from './browser';
 import {logger} from './logger';
+import {logTransferStats} from './stats';
 import {tryLookupAndLoop} from './store';
 import {getStores, Store} from './store/model';
 import type {Timer} from './timers';
@@ -21,10 +21,10 @@ class StreetMerchantApplication {
     (error: unknown) => void
   >;
 
-  #browser?: Browser;
   #checkForNewStoresTimer?: Timer;
   #errorRestartTimer?: Timer;
   #running = false;
+  #statsTimer?: Timer;
   #stores: Store[] = [];
   #shutdownStartTime?: number;
   #tempDirectory?: string;
@@ -53,6 +53,7 @@ class StreetMerchantApplication {
 
     abortctl.create('app.running');
     timers.enable();
+    enableBrowserContexts();
 
     // register restart handler
     if (config.restartTime > 0) {
@@ -62,17 +63,18 @@ class StreetMerchantApplication {
     await startAPIServer();
 
     this.#tempDirectory = temporaryDirectory({prefix: 'streetmerchant-'});
-    this.#browser = await launchBrowser({userDataDir: this.#tempDirectory});
+    config.browser.profileParentDir = this.#tempDirectory;
+
+    this.#statsTimer = timers.addInterval(logTransferStats, 60000);
     this.#stores = [];
 
-    this.#lookupEnabledStores(this.#browser);
+    this.#lookupEnabledStores();
 
     // check for stores enabled via the web interface every second
     // todo refactor this to use event emitter
     this.#checkForNewStoresTimer = timers.addInterval(
       this.#lookupEnabledStores.bind(this),
-      1000,
-      this.#browser
+      1000
     );
   }
 
@@ -102,17 +104,20 @@ class StreetMerchantApplication {
       this.#errorRestartTimer = undefined;
     }
 
+    if (this.#statsTimer) {
+      timers.removeTimeout(this.#statsTimer);
+      this.#statsTimer = undefined;
+    }
+
+    // the ordering here is specific while page functions do not accept
+    // signalling via an abort controller
     abortctl.destroy('app.running');
     timers.abort();
+    await abortBrowserContexts();
 
     await stopAPIServer().catch(() => {});
 
     this.#stores = [];
-
-    if (this.#browser) {
-      await this.#browser.close().catch(() => {});
-      this.#browser = undefined;
-    }
 
     if (this.#tempDirectory) {
       logger.debug(`cleaning up temp directory: file://${this.#tempDirectory}`);
@@ -143,13 +148,13 @@ class StreetMerchantApplication {
     process.exit(1);
   }
 
-  #lookupEnabledStores(browser: Browser) {
+  #lookupEnabledStores() {
     const pending = [...getStores().values()].filter(
       store => !this.#stores.includes(store)
     );
 
     for (const store of pending) {
-      tryLookupAndLoop(browser, store).finally(() => {
+      tryLookupAndLoop(store).finally(() => {
         const i = this.#stores.indexOf(store);
         if (i >= 0) {
           this.#stores.splice(i, 1);

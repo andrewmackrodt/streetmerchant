@@ -173,8 +173,8 @@ function loadProxyList(filename: string): string[] | undefined {
 }
 
 const browser = {
+  cookiePolicy: envOrString(process.env.COOKIE_POLICY),
   isHeadless: envOrBoolean(process.env.HEADLESS),
-  isIncognito: envOrBoolean(process.env.INCOGNITO, false),
   isTrusted: envOrBoolean(process.env.BROWSER_TRUSTED, false),
   lowBandwidth: envOrBoolean(process.env.LOW_BANDWIDTH, false),
   lowBandwidthMode: envOrNumber(process.env.LOW_BANDWIDTH_MODE),
@@ -202,10 +202,7 @@ const browser = {
     process.env.OPEN_BROWSER,
     !envOrBoolean(process.env.DOCKER, false)
   ),
-  proxyCredentials: undefined as
-    | undefined
-    | {username: string; password: string},
-  userAgent: '',
+  profileParentDir: '',
   userAgentKeepDefault: envOrBoolean(
     process.env.USER_AGENT_KEEP_DEFAULT,
     false

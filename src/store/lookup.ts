@@ -18,7 +18,7 @@ import {sendNotification} from '../messaging';
 import {handleCaptchaAsync} from './captcha-handler';
 import {promises as fs} from 'fs';
 import path from 'path';
-import {tryUsingPage} from '../browser';
+import {processCookieHandling, tryUsingPage, usingBrowser} from '../browser';
 import {addTimeout} from '../timers';
 
 const inStock: Record<string, boolean> = {};
@@ -57,46 +57,50 @@ async function lookup(browser: Browser, store: Store) {
       continue;
     }
 
-    await tryUsingPage<void>(browser, store, async page => {
-      if (store.captchaDeterrent) {
-        await runCaptchaDeterrent(browser, store, page);
-      }
-
-      let statusCode = 0;
-
-      try {
-        statusCode = await lookupIem(browser, store, page, link);
-      } catch (error: unknown) {
-        if (store.currentProxyIndex !== undefined && store.proxyList) {
-          const proxy = `${store.currentProxyIndex + 1}/${
-            store.proxyList.length
-          }`;
-          logger.error(
-            `✖ [${proxy}] [${store.name}] ${link.brand} ${link.series} ${
-              link.model
-            } - ${(error as Error).message}`
-          );
-        } else {
-          logger.error(
-            `✖ [${store.name}] ${link.brand} ${link.series} ${link.model} - ${
-              (error as Error).message
-            }`
-          );
-        }
-        const client = await page.target().createCDPSession();
-        await client.send('Network.clearBrowserCookies');
-      }
-
-      // Must apply backoff before closing the page, e.g. if CloudFlare is
-      // used to detect bot traffic, it introduces a 5 second page delay
-      // before redirecting to the next page
-      await processBackoffDelay(store, link, statusCode);
-    });
+    await tryUsingPage(browser, store, page =>
+      lookupItem(browser, store, page, link)
+    );
   }
-  /* eslint-enable no-await-in-loop */
 }
 
-async function lookupIem(
+async function lookupItem(
+  browser: Browser,
+  store: Store,
+  page: Page,
+  link: Link
+) {
+  let statusCode = 0;
+
+  try {
+    if (store.captchaDeterrent) {
+      await runCaptchaDeterrent(browser, store, page);
+    }
+
+    statusCode = await _lookupIem(browser, store, page, link);
+  } catch (error: unknown) {
+    const labels = [`[${store.name}]`, link.brand, link.series, link.model];
+
+    if (store.currentProxyIndex !== undefined && store.proxyList) {
+      const proxy = `${store.currentProxyIndex + 1}/${store.proxyList.length}`;
+      labels.unshift(`[${proxy}]`);
+    }
+
+    const message = error instanceof Error ? error.message : `${error}`;
+
+    logger.error(`✖ ${labels.join(' ')} - ${message}`);
+  } finally {
+    // Apply specific non-default cookie handling policies for the given
+    // store and link, based on the status code.
+    await processCookieHandling(browser, store, link, statusCode);
+
+    // Must apply backoff before closing the page, e.g. if CloudFlare is
+    // used to detect bot traffic, it introduces a 5 second page delay
+    // before redirecting to the next page
+    await processBackoffDelay(store, link, statusCode);
+  }
+}
+
+async function _lookupIem(
   browser: Browser,
   store: Store,
   page: Page,
@@ -385,13 +389,13 @@ async function runCaptchaDeterrent(browser: Browser, store: Store, page: Page) {
   }
 }
 
-export async function tryLookupAndLoop(browser: Browser, store: Store) {
+export async function tryLookupAndLoop(store: Store) {
   // delay starting the loop to reduce the amount of simultaneous requests
   // during application start or when enabling new stores via the web api
   await delay(getSleepTime(store));
 
   if (store.setupAction) {
-    await store.setupAction(browser);
+    await usingBrowser(store, store.setupAction);
   }
 
   logger.debug('store links', {meta: {links: store.links}});
@@ -399,7 +403,12 @@ export async function tryLookupAndLoop(browser: Browser, store: Store) {
   while (storeShouldRun(store)) {
     try {
       logger.silly(`[${store.name}] Starting lookup...`);
-      await lookup(browser, store);
+
+      // todo make proxy rotation a configuration item
+      // rotating proxies per page request can result in ERR_HTTP2_SERVER_REFUSED_STREAM
+      // after a few loop iterations on fast machines when using several stores;
+      // as a workaround, we will keep the same browser/proxy instance for a loop
+      await usingBrowser(store, async browser => lookup(browser, store));
     } catch (error: unknown) {
       logUnexpectedError(error);
     }

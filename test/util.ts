@@ -89,7 +89,7 @@ export async function launchTestBrowser(): Promise<Browser> {
     logger.info('ℹ puppeteer config: ', args);
   }
 
-  const browser = await launch({
+  return await launch({
     args,
     defaultViewport: {
       height: config.page.height,
@@ -97,8 +97,4 @@ export async function launchTestBrowser(): Promise<Browser> {
     },
     headless: config.browser.isHeadless,
   });
-
-  config.browser.userAgent = await browser.userAgent();
-
-  return browser;
 }

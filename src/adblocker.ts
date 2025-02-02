@@ -26,4 +26,7 @@ export async function disableBlockerInPage(page: Page) {
   }
 
   await blockerObject.disableBlockingInPage(page);
+
+  // re-enable request interception
+  await page.setRequestInterception(true);
 }
