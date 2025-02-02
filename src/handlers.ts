@@ -4,7 +4,12 @@ import {config} from './config';
 import {logger} from './logger';
 import type {Proxy} from './proxy';
 
-const LOW_BANDWIDTH_REJECTED_RESOURCE_TYPES = ['font', 'image'];
+const LOW_BANDWIDTH_MODES = [
+  ['font', 'image'],
+  ['font', 'image', 'media', 'other', 'stylesheet'],
+];
+
+const rejectedResourceTypes = getLowBandwidthRejectedResourceTypes();
 
 export async function onRequest(
   page: Page,
@@ -39,7 +44,7 @@ async function isHandleLowBandwidth(request: HTTPRequest): Promise<boolean> {
     !config.browser.lowBandwidth ||
     request.url().startsWith('data:') ||
     request.url().includes('://challenges.cloudflare.com') ||
-    !LOW_BANDWIDTH_REJECTED_RESOURCE_TYPES.includes(request.resourceType())
+    !rejectedResourceTypes.includes(request.resourceType())
   ) {
     return false;
   }
@@ -119,5 +124,30 @@ export async function tryAbortRequest(request: HTTPRequest): Promise<void> {
     await request.abort();
   } catch (err) {
     logger.debug(`✖ failed to abort request: ${request.url()}`, err);
+  }
+}
+
+function getLowBandwidthRejectedResourceTypes(): string[] {
+  if (
+    config.browser.lowBandwidthMode >= 0 &&
+    config.browser.lowBandwidthMode < LOW_BANDWIDTH_MODES.length
+  ) {
+    const rejected = LOW_BANDWIDTH_MODES[config.browser.lowBandwidthMode];
+    logger.debug(
+      `ℹ low bandwidth mode is enabled, the following requests will be blocked: ${rejected.join(
+        ', '
+      )}`
+    );
+    return rejected;
+  } else {
+    const rejected = LOW_BANDWIDTH_MODES[0];
+    logger.warn(
+      `✖ invalid value LOW_BANDWIDTH_MODE=${
+        config.browser.lowBandwidthMode
+      } expected value between 0..${
+        LOW_BANDWIDTH_MODES.length - 1
+      }, defaulting to: ${rejected.join(', ')}`
+    );
+    return rejected;
   }
 }
