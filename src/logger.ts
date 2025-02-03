@@ -157,18 +157,20 @@ export const Print = {
     message: string,
     topic: string,
     store: Store,
-    color?: boolean
+    color?: boolean,
+    info?: boolean
   ): string {
+    const symbol = info ? 'ℹ' : '✖';
     if (color) {
       return (
-        '✖ ' +
+        `${symbol} ` +
         buildSetupString(topic, store, true) +
         ' :: ' +
         chalk.yellow(message)
       );
     }
 
-    return `✖ ${buildSetupString(topic, store)} :: ${message}`;
+    return `${symbol} ${buildSetupString(topic, store)} :: ${message}`;
   },
   noResponse(link: Link, store: Store, color?: boolean): string {
     if (color) {
