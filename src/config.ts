@@ -410,12 +410,12 @@ const nvidia = {
 };
 
 const page = {
-  height: 1080,
+  height: 900,
   inStockWaitTime: envOrNumber(process.env.IN_STOCK_WAIT_TIME),
   screenshot: envOrBoolean(process.env.SCREENSHOT),
   screenshotDir: envOrString(process.env.SCREENSHOT_DIR, 'screenshots'),
   timeout: envOrNumber(process.env.PAGE_TIMEOUT, 30000),
-  width: 1920,
+  width: 1366,
 };
 
 const proxy = {

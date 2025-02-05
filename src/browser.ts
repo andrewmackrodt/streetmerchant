@@ -5,26 +5,34 @@ import {logger} from './logger';
 import {parseProxy} from './proxy';
 
 export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
-  const args: string[] = [];
+  const args: string[] = [
+    '--disable-blink-features=AutomationControlled',
+    `--window-size=${config.page.width},${config.page.height}`,
+  ];
 
   // Skip Chromium Linux Sandbox
   // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox
   if (config.browser.isTrusted) {
-    args.push('--no-sandbox');
     args.push('--disable-setuid-sandbox');
+    args.push('--no-sandbox');
   }
 
   // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
   // https://stackoverflow.com/questions/48230901/docker-alpine-with-node-js-and-chromium-headless-puppeter-failed-to-launch-c
   if (config.docker) {
     args.push('--disable-dev-shm-usage');
-    args.push('--no-sandbox');
-    args.push('--disable-setuid-sandbox');
-    if (!config.browser.isHeadless) {
-      args.push('--headless=new');
-    }
     args.push('--disable-gpu');
+    args.push('--disable-setuid-sandbox');
+    args.push('--no-sandbox');
     config.browser.open = false;
+  }
+
+  // Enable headless (force if docker)
+  if (config.browser.isHeadless || config.docker) {
+    args.push(
+      '--headless=new',
+      `--ozone-override-screen-size=${config.page.width},${config.page.height}`
+    );
   }
 
   // Add the address of the proxy server if defined
@@ -37,19 +45,16 @@ export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
   }
 
   if (args.length > 0) {
-    logger.info('ℹ puppeteer config: ', args);
+    logger.info('ℹ puppeteer config: ', args.toSorted());
   }
 
   const browser = await Puppeteer.launch({
     args,
-    defaultViewport: {
-      height: config.page.height,
-      width: config.page.width,
-    },
+    defaultViewport: null,
     handleSIGHUP: false,
     handleSIGINT: false,
     handleSIGTERM: false,
-    headless: config.browser.isHeadless,
+    headless: false, // explicitly specified in args
     ...options,
   });
 
