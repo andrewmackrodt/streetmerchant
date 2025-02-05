@@ -1,7 +1,7 @@
 ################################################################################
 # corepack
 ################################################################################
-FROM node:20-alpine AS corepack
+FROM node:20-bookworm-slim AS corepack
 
 LABEL org.opencontainers.image.source="https://github.com/jef/streetmerchant"
 LABEL org.opencontainers.image.description="The world's easiest, most powerful stock checker"
@@ -11,20 +11,19 @@ LABEL org.opencontainers.image.licenses="MIT"
 RUN npm i -g corepack \
  && corepack enable
 
-# create non-privileged user
-RUN adduser -s /bin/sh -D appuser \
- && mkdir -p /app \
- && chown -R appuser:appuser /app
+# create application directory
+RUN mkdir -p /app \
+ && chown -R node:node /app
 
-USER appuser
+USER node
 
 WORKDIR /app
 
 # setup pnpm
-ENV SHELL=/bin/sh \
-    ENV=/home/appuser/.shrc \
-    PNPM_HOME=/home/appuser/.local/share/pnpm \
-    PATH=/home/appuser/.local/share/pnpm:$PATH
+ENV SHELL=/bin/bash \
+    ENV=/home/node/.bashrc \
+    PNPM_HOME=/home/node/.local/share/pnpm \
+    PATH=/home/node/.local/share/pnpm:$PATH
 
 RUN --mount=type=bind,source=/package.json,target=package.json \
  corepack install
@@ -65,20 +64,26 @@ FROM corepack
 
 USER root
 
-RUN apk add --no-cache chromium
+# install google-chrome-stable
+RUN apt update -qq \
+ && apt install -qqy wget \
+ && wget -qO /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+ && apt install -qqy /tmp/google-chrome-stable_current_amd64.deb \
+ && rm /tmp/google-chrome-stable_current_amd64.deb \
+ && rm -rf /var/lib/apt/lists/*
 
-USER appuser
+USER node
 
-COPY --from=builder --chown=appuser:appuser /app/node_modules/ node_modules/
-COPY --from=builder --chown=appuser:appuser /app/build/ ./
-COPY --from=builder --chown=appuser:appuser /app/package.json package.json
-COPY --from=builder --chown=appuser:appuser /app/pnpm-lock.yaml pnpm-lock.yaml
-COPY --chown=appuser:appuser docs/ docs/
-COPY --chown=appuser:appuser web/ web/
-COPY --chown=appuser:appuser LICENSE LICENSE
-COPY --chown=appuser:appuser README.md README.md
+COPY --from=builder --chown=node:node /app/node_modules/ node_modules/
+COPY --from=builder --chown=node:node /app/build/ ./
+COPY --from=builder --chown=node:node /app/package.json package.json
+COPY --from=builder --chown=node:node /app/pnpm-lock.yaml pnpm-lock.yaml
+COPY --chown=node:node docs/ docs/
+COPY --chown=node:node web/ web/
+COPY --chown=node:node LICENSE LICENSE
+COPY --chown=node:node README.md README.md
 
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome \
     DOCKER=true
 
 ENTRYPOINT ["pnpm", "run", "start"]

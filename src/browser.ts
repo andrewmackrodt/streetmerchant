@@ -17,16 +17,13 @@ export async function launchBrowser(options?: LaunchOptions): Promise<Browser> {
   // Skip Chromium Linux Sandbox
   // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox
   if (config.browser.isTrusted) {
-    args.push('--disable-setuid-sandbox');
     args.push('--no-sandbox');
   }
 
   // https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#tips
   // https://stackoverflow.com/questions/48230901/docker-alpine-with-node-js-and-chromium-headless-puppeter-failed-to-launch-c
   if (config.docker) {
-    args.push('--disable-dev-shm-usage');
     args.push('--disable-gpu');
-    args.push('--disable-setuid-sandbox');
     args.push('--no-sandbox');
     config.browser.open = false;
   }
