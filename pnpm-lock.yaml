@@ -72,8 +72,8 @@ importers:
         specifier: ^3.1.2
         version: 3.1.2
       top-user-agents:
-        specifier: ^1.0.37
-        version: 1.0.37
+        specifier: ^2.1.33
+        version: 2.1.33
       twilio:
         specifier: ^3.71.1
         version: 3.71.1
@@ -1112,10 +1112,6 @@ packages:
   denque@1.5.0:
     resolution: {integrity: sha512-CYiCSgIF1p6EUByQPlGkKnP1M9g0ZV3qMIrqMqZqdwazygIA/YP2vrbcyl1h/WppKJTdl1F85cXIle+394iDAQ==}
     engines: {node: '>=0.10'}
-
-  detect-indent@6.1.0:
-    resolution: {integrity: sha512-reYkTUJAZb9gUuZ2RvVCNhVHdg62RHnJ7WJl8ftMi4diZ6NWlciOzQN88pUhSELEwflJht4oQDv0F0BMlwaYtA==}
-    engines: {node: '>=8'}
 
   devtools-protocol@0.0.1367902:
     resolution: {integrity: sha512-XxtPuC3PGakY6PD7dG66/o8KwJ/LkH2/EKe19Dcw58w53dv4/vSQEkn/SzuyhHE2q4zPgCkxQBxus3VV4ql+Pg==}
@@ -2737,10 +2733,6 @@ packages:
     resolution: {integrity: sha512-l5x7VUUWbjVFbafGLxPWkYsHIhEvmF85tbIeFZWc8ZPtoMyybuEhL7Jye/ooC4/d48FgOjSJXgsF/AJPYCW8Zw==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
-  sort-keys@4.2.0:
-    resolution: {integrity: sha512-aUYIEU/UviqPgc8mHR6IW1EGxkAXpeRETYcrzg8cLAvUPZcpAlleSXHV2mY7G12GphSH6Gzv+4MMVSSkbdteHg==}
-    engines: {node: '>=8'}
-
   source-map-support@0.5.19:
     resolution: {integrity: sha512-Wonm7zOCIJzBGQdB+thsPar0kYuCIzYvxZwlBa87yi/Mdjv7Tip2cyVbLj5o0cFPN4EVkuTwb3GDDyUx2DGnGw==}
 
@@ -2920,9 +2912,8 @@ packages:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
     engines: {node: '>=8.0'}
 
-  top-user-agents@1.0.37:
-    resolution: {integrity: sha512-B8ZFq2loTCE6Rc8qJnqEvXlk0KxzcE4BhfbMkk9MHPtsyZ6ohXpA5jcchEskRJNw+yG+PDkvWwSqPqG5iBwYww==}
-    engines: {node: '>= 10'}
+  top-user-agents@2.1.33:
+    resolution: {integrity: sha512-o7Rj5qeshbqNZ+xeeQ1NpKhO0vafnZiZLtOLEzD48PJElLqS2NgP/TXkuE9udCnkCy+GwJl8T9y+0cWxjhmB4w==}
 
   tough-cookie@2.4.3:
     resolution: {integrity: sha512-Q5srk/4vDM54WJsJio3XNn6K2sCG+CQ8G5Wz6bZhRZoAe/+TxjWB/GlFAnYEbkYVlON9FMk/fE3h2RLpPXo4lQ==}
@@ -3195,10 +3186,6 @@ packages:
 
   write-file-atomic@3.0.3:
     resolution: {integrity: sha512-AvHcyZ5JnSfq3ioSyjrBkH9yW4m7Ayk8/9My/DD9onKeu/94fwrMocemO2QAJFAlnnDN+ZDS+ZjAR5ua1/PV/Q==}
-
-  write-json-file@4.3.0:
-    resolution: {integrity: sha512-PxiShnxf0IlnQuMYOPPhPkhExoCQuTUNPOa/2JWCYTmBquU9njyyDuwRKN26IZBlp4yn1nt+Agh2HOOBl+55HQ==}
-    engines: {node: '>=8.3'}
 
   ws@7.5.3:
     resolution: {integrity: sha512-kQ/dHIzuLrS6Je9+uv81ueZomEwH0qVYstcAQ4/Z93K8zeko9gtAbttJWzoC5ukqXY1PpoouV3+VSOqEAFt5wg==}
@@ -4345,8 +4332,6 @@ snapshots:
   delayed-stream@1.0.0: {}
 
   denque@1.5.0: {}
-
-  detect-indent@6.1.0: {}
 
   devtools-protocol@0.0.1367902: {}
 
@@ -6055,10 +6040,6 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  sort-keys@4.2.0:
-    dependencies:
-      is-plain-obj: 2.1.0
-
   source-map-support@0.5.19:
     dependencies:
       buffer-from: 1.1.1
@@ -6256,11 +6237,7 @@ snapshots:
     dependencies:
       is-number: 7.0.0
 
-  top-user-agents@1.0.37:
-    dependencies:
-      cheerio: 1.0.0
-      got: 11.8.2
-      write-json-file: 4.3.0
+  top-user-agents@2.1.33: {}
 
   tough-cookie@2.4.3:
     dependencies:
@@ -6576,15 +6553,6 @@ snapshots:
       is-typedarray: 1.0.0
       signal-exit: 3.0.3
       typedarray-to-buffer: 3.1.5
-
-  write-json-file@4.3.0:
-    dependencies:
-      detect-indent: 6.1.0
-      graceful-fs: 4.2.8
-      is-plain-obj: 2.1.0
-      make-dir: 3.1.0
-      sort-keys: 4.2.0
-      write-file-atomic: 3.0.3
 
   ws@7.5.3: {}
 

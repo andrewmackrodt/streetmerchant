@@ -57,7 +57,7 @@
     "puppeteer": "npm:rebrowser-puppeteer@^23.10.3",
     "pushover-notifications": "^1.2.2",
     "redis": "^3.1.2",
-    "top-user-agents": "^1.0.37",
+    "top-user-agents": "^2.1.33",
     "twilio": "^3.71.1",
     "twitter": "^1.7.1",
     "winston": "^3.3.3"

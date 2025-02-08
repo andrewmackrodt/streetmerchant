@@ -4,7 +4,9 @@ import {StatusCodeRangeArray, Store} from './store/model';
 import {config} from './config';
 import {disableBlockerInPage} from './adblocker';
 import {logger} from './logger';
-import topUserAgents from 'top-user-agents';
+
+// must be a require call unless converting project to use esm
+const topUserAgents: string[] = require('top-user-agents/desktop');
 
 export function getSleepTime(store: Store) {
   const minSleep = store.minPageSleep as number;
