@@ -143,7 +143,10 @@ async function lookupIem(
         config.page.screenshotDir,
         `success-${Date.now()}.png`
       );
-      await page.screenshot({path: link.screenshot});
+      await page.screenshot({
+        path: link.screenshot,
+        fullPage: config.page.screenshotFullPage,
+      });
     }
   }
 
