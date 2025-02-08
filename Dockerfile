@@ -66,11 +66,20 @@ USER root
 
 # install google-chrome-stable
 RUN apt update -qq \
- && apt install -qqy wget \
+ && apt install -qqy wget xvfb \
+ && wget -qO /usr/local/bin/xvfb-run https://salsa.debian.org/xorg-team/xserver/xorg-server/-/raw/debian-unstable/debian/local/xvfb-run \
+ && chmod +x /usr/local/bin/xvfb-run \
  && wget -qO /tmp/google-chrome-stable_current_amd64.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
  && apt install -qqy /tmp/google-chrome-stable_current_amd64.deb \
  && rm /tmp/google-chrome-stable_current_amd64.deb \
  && rm -rf /var/lib/apt/lists/*
+
+# todo create docker-entrypoint.sh with persistent Xvfb and vnc (shared display)
+# create helper script to start chrome with xvfb
+RUN echo '#!/bin/sh\n\
+exec xvfb-run -a --server-args="-screen 0 1920x1080x24" /usr/bin/google-chrome "$@"\n\
+' | tee /usr/local/bin/google-chrome-xvfb >/dev/null \
+ && chmod +x /usr/local/bin/google-chrome-xvfb
 
 USER node
 

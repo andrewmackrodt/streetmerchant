@@ -124,8 +124,8 @@ export async function launchBrowser(
     config.browser.open = false;
   }
 
-  // Enable headless (force if docker)
-  if (config.browser.isHeadless || config.docker || options?.headless) {
+  // Enable headless
+  if (config.browser.isHeadless || options?.headless) {
     if (options && 'headless' in options) {
       options = Object.assign({}, options);
       delete options.headless;
