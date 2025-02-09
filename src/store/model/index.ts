@@ -452,6 +452,10 @@ export function updateStores() {
       store.minPageSleep = storeData.minPageSleep;
       store.maxPageSleep = storeData.maxPageSleep;
       store.proxyList = storeData.proxyList;
+      // assign a random starting position so that different stores use
+      // different proxies while running at the same time
+      store.currentProxyIndex =
+        Math.floor(Math.random() * (store.proxyList?.length ?? 0)) - 1;
     } else {
       logger.warn(`No store named ${storeData.name}, skipping.`);
     }
