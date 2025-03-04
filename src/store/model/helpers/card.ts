@@ -97,7 +97,7 @@ export function parseCard(name: string): Card | null {
 
   name = name.replace(/[^\w ]+/g, '');
   name = name.replace(/\bgraphics card\b/gi, '');
-  name = name.replace(/\b(?<!founders) edition\b/gi, '');
+  name = name.replace(/\b(?<!founders|limited) edition\b/gi, '');
   name = name.replace(/\b(series )?bundle\b/gi, '');
   name = name.replace(/\bfan\b/gi, '');
   name = name.replace(/\s{2,}/g, ' ').trim();
@@ -129,10 +129,14 @@ export function parseCard(name: string): Card | null {
 
     return (
       !word.match(
-        /^(nvidia|geforce|ge|force|rtx|amp[ae]re|blackwell|graphics|card|gpu|pci-?e(xpress)?|ray-?tracing|ray|tracing|core|boost|epicx)$/i
+        /^(graphics|card|gpu|pci-?e(xpress)?|ray-?tracing|ray|tracing|core|boost)$/i
       ) &&
+      !word.match(
+        /^(nvidia|geforce|ge|force|rtx|ti|super|amp[ae]re|blackwell|epic-?x)$/i
+      ) &&
+      !word.match(/^(amd|radeon|rx|xt|rdna[0-9]*)$/i) &&
       !word.match(/^(\d+(?:gb?|mhz)?|gb|mhz|g?ddr(\d+x?)?)$/i) &&
-      !word.match(/^(display ?port|hdmi|vga)$/i)
+      !word.match(/^(display[ -]?port|hdmi|vga)$/i)
     );
   });
   /* eslint-enable @typescript-eslint/prefer-regexp-exec */

@@ -129,6 +129,14 @@ export const Scan: Store = {
         series: '5090',
         url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-nvidia-gaming/geforce-rtx-5090-graphics-cards',
       },
+      {
+        series: 'rx9070',
+        url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-amd-gaming/amd-radeon-rx-9070-graphics-cards',
+      },
+      {
+        series: 'rx9070xt',
+        url: 'https://www.scan.co.uk/shop/computer-hardware/gpu-amd-gaming/amd-radeon-rx-9070-xt-graphics-cards',
+      },
     ],
   },
   name: 'scan',

@@ -70,6 +70,14 @@ export const Overclockers: Store = {
         url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/amd/radeon-rx-6900-xt-series',
       },
       {
+        series: 'rx9070',
+        url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/amd-graphics-cards/amd-radeon-rx-9070-graphics-cards',
+      },
+      {
+        series: 'rx9070xt',
+        url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/amd-graphics-cards/amd-radeon-rx-9070-xt-graphics-cards',
+      },
+      {
         series: '3060',
         url: 'https://www.overclockers.co.uk/pc-components/graphics-cards/nvidia/geforce-rtx-3060',
       },
